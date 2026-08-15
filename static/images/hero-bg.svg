@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bgBase" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d0f14"/>
+      <stop offset="45%" stop-color="#11141c"/>
+      <stop offset="100%" stop-color="#0a0c11"/>
+    </linearGradient>
+
+    <radialGradient id="glowBlue" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3a7aff" stop-opacity="0.55"/>
+      <stop offset="55%" stop-color="#3a7aff" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#3a7aff" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="glowPink" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff4fc3" stop-opacity="0.35"/>
+      <stop offset="55%" stop-color="#ff4fc3" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#ff4fc3" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="chromeLine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6bb0ff" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#f0f4fa" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#3a7aff" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="chromeLinePink" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff6fd8" stop-opacity="0.85"/>
+      <stop offset="60%" stop-color="#6bb0ff" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#3a7aff" stop-opacity="0"/>
+    </linearGradient>
+
+    <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="40"/>
+    </filter>
+
+    <pattern id="grid" width="46" height="46" patternUnits="userSpaceOnUse">
+      <path d="M 46 0 L 0 0 0 46" fill="none" stroke="rgba(200,210,224,0.05)" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#bgBase)"/>
+  <rect width="1600" height="1000" fill="url(#grid)"/>
+
+  <!-- ambient glows -->
+  <circle cx="1180" cy="260" r="420" fill="url(#glowBlue)" filter="url(#softBlur)"/>
+  <circle cx="260" cy="760" r="380" fill="url(#glowPink)" filter="url(#softBlur)"/>
+  <circle cx="820" cy="880" r="300" fill="url(#glowBlue)" filter="url(#softBlur)" opacity="0.65"/>
+
+  <!-- layered glass-panel outlines, echoing the phone-glass motif -->
+  <g opacity="0.9">
+    <rect x="980" y="120" width="360" height="640" rx="46" fill="none" stroke="url(#chromeLine)" stroke-width="2" transform="rotate(-8 1160 440)"/>
+    <rect x="1040" y="180" width="300" height="540" rx="38" fill="none" stroke="url(#chromeLinePink)" stroke-width="1.5" transform="rotate(4 1190 450)"/>
+  </g>
+
+  <g opacity="0.5">
+    <rect x="120" y="480" width="230" height="410" rx="30" fill="none" stroke="url(#chromeLine)" stroke-width="1.5" transform="rotate(10 235 685)"/>
+  </g>
+
+  <!-- fine hairline circuit accents -->
+  <g stroke="rgba(107,176,255,0.25)" stroke-width="1" fill="none">
+    <path d="M0 640 H420 L470 590 H760"/>
+    <path d="M1600 760 H1220 L1170 820 H900"/>
+    <path d="M0 160 H260 L300 200 H540"/>
+  </g>
+  <g fill="#6bb0ff">
+    <circle cx="760" cy="590" r="3"/>
+    <circle cx="900" cy="820" r="3"/>
+    <circle cx="540" cy="200" r="3"/>
+  </g>
+</svg>

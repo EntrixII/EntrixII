@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Services — Entrix II | Web Development, Software & Digital Solutions{% endblock %}
+{% block description %}Website development, web applications, mobile applications, e-commerce, UI/UX, SEO, AI automation and custom software — end-to-end digital solutions from Entrix II.{% endblock %}
+
+{% block content %}
+
+<!-- =========================================================
+     PAGE HEADER
+========================================================= -->
+
+<div class="page-header">
+  <h1>Services</h1>
+  <p>End‑to‑end digital solutions engineered for impact — from a first website to a complete business platform.</p>
+</div>
+
+
+<!-- =========================================================
+     WHAT WE OFFER — DETAILED SERVICE GRID
+========================================================= -->
+
+<section class="section-services-detail">
+
+  <div class="container">
+
+    <p class="section-kicker">WHAT WE OFFER</p>
+
+    <h2 class="section-title">
+      Every service, built with
+      <span>engineering behind it.</span>
+    </h2>
+
+    <p class="section-sub">
+      Not templates. Not guesswork. Every service below is backed by real
+      full-stack development, not just design.
+    </p>
+
+    <div class="service-detail-grid">
+
+      {% for service in services %}
+      <article class="service-detail-card">
+
+        <div class="service-detail-top">
+          <span class="service-detail-icon">{{ service.icon }}</span>
+          <span class="service-detail-index">{{ '%02d' | format(loop.index) }}</span>
+        </div>
+
+        <h3>{{ service.title }}</h3>
+
+        <p>{{ service.description }}</p>
+
+        <ul class="service-detail-features">
+          {% for feature in service.features %}
+          <li>{{ feature }}</li>
+          {% endfor %}
+        </ul>
+
+        <a href="{{ url_for('contact') }}?service={{ service.id }}" class="service-detail-link">
+          Get a Quote →
+        </a>
+
+      </article>
+      {% endfor %}
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     HOW WE WORK
+========================================================= -->
+
+<section class="section-process">
+
+  <div class="container">
+
+    <p class="section-kicker">OUR PROCESS</p>
+
+    <h2 class="section-title">
+      From idea to
+      <span>working product.</span>
+    </h2>
+
+    <div class="process-grid">
+
+      <div class="process-item">
+        <span>01</span>
+        <h3>Understand</h3>
+        <p>
+          We understand your business, audience, goals and the problem
+          the product needs to solve.
+        </p>
+      </div>
+
+      <div class="process-item">
+        <span>02</span>
+        <h3>Design</h3>
+        <p>
+          We structure the user experience, interface and technical
+          requirements before development begins.
+        </p>
+      </div>
+
+      <div class="process-item">
+        <span>03</span>
+        <h3>Build</h3>
+        <p>
+          We develop the product, integrate the required systems and
+          continuously test the experience.
+        </p>
+      </div>
+
+      <div class="process-item">
+        <span>04</span>
+        <h3>Launch</h3>
+        <p>
+          We deploy the product, optimize its performance and make sure
+          everything is ready for real users.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     HOW WE WORK WITH YOU — ENGAGEMENT MODELS
+========================================================= -->
+
+<section class="section-engagement">
+
+  <div class="container">
+
+    <p class="section-kicker">HOW WE WORK WITH YOU</p>
+
+    <h2 class="section-title">
+      Flexible engagement,
+      <span>real ownership.</span>
+    </h2>
+
+    <p class="section-sub">
+      Every business is different, so every quote is scoped to the actual
+      work — not a fixed package. Here's how most engagements start.
+    </p>
+
+    <div class="engagement-grid">
+
+      <div class="engagement-card">
+        <span class="engagement-tag">PROJECT-BASED</span>
+        <h3>New Build</h3>
+        <p>
+          A defined website, application or platform built from a clear
+          scope, timeline and deliverable — ideal for a first website or
+          a specific product.
+        </p>
+        <ul>
+          <li>Fixed scope &amp; timeline</li>
+          <li>One clear deliverable</li>
+          <li>Best for new projects</li>
+        </ul>
+      </div>
+
+      <div class="engagement-card engagement-featured">
+        <span class="engagement-tag">ONGOING PARTNERSHIP</span>
+        <h3>Retainer &amp; Growth</h3>
+        <p>
+          Continued development, feature additions, SEO and maintenance
+          for a product that keeps evolving alongside the business.
+        </p>
+        <ul>
+          <li>Ongoing feature development</li>
+          <li>Maintenance &amp; monitoring</li>
+          <li>Best for active platforms</li>
+        </ul>
+      </div>
+
+      <div class="engagement-card">
+        <span class="engagement-tag">CONSULTING &amp; AUDIT</span>
+        <h3>Technical Review</h3>
+        <p>
+          A technical or SEO audit of an existing site or system, with a
+          clear, prioritized plan for what to fix and build next.
+        </p>
+        <ul>
+          <li>Technical / SEO audit</li>
+          <li>Prioritized remediation plan</li>
+          <li>Best for existing products</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="text-center" style="margin-top: 2.5rem;">
+      <a href="{{ url_for('contact') }}" class="btn btn-ghost">
+        Talk Through Your Project →
+      </a>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     FAQ
+========================================================= -->
+
+<section class="section-faq">
+
+  <div class="container">
+
+    <p class="section-kicker">QUESTIONS</p>
+
+    <h2 class="section-title">
+      Before you
+      <span>reach out.</span>
+    </h2>
+
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <h3>How long does a typical project take?</h3>
+        <p>
+          A standard business website usually takes a few weeks. Web
+          applications, e-commerce platforms and custom software take
+          longer, depending on scope. Every quote includes a realistic
+          timeline before work starts.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Do you only build for businesses in Nigeria?</h3>
+        <p>
+          No — Entrix II works remotely with clients anywhere. Projects
+          like Jecyani Properties and Crownbee Global Services span
+          real estate businesses across multiple regions.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Can you redesign my existing website instead of building new?</h3>
+        <p>
+          Yes. Many engagements start with a technical or SEO audit of an
+          existing site, followed by a redesign or rebuild focused on the
+          issues that are actually holding it back.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h3>What's the difference between a website and a web application?</h3>
+        <p>
+          A website presents information — pages, content, contact forms.
+          A web application does work — logins, dashboards, databases,
+          payments and business logic. Most projects sit somewhere on
+          that spectrum, and we scope accordingly.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Do you offer support after launch?</h3>
+        <p>
+          Yes. Post-launch support, monitoring and ongoing feature work
+          are available through a retainer, so the product keeps
+          improving after it ships.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     FINAL CTA
+========================================================= -->
+
+<section class="section-cta">
+
+  <div class="cta-glass">
+
+    <h2>Have a project in mind?</h2>
+
+    <p>Tell us what you're building — we'll tell you exactly how to build it.</p>
+
+    <a href="{{ url_for('contact') }}" class="btn btn-primary">
+      Start a Project →
+    </a>
+
+  </div>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Work — Entrix II{% endblock %}
+{% block description %}Explore our portfolio of websites, applications, and digital products built for real‑world success.{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Work</h1>
+  <p>Selected projects and case studies.</p>
+</div>
+
+<div class="project-grid">
+  {% for project in projects %}
+  <div class="project-card {% if project.live %}live{% else %}case-study{% endif %}">
+    <div class="project-card-inner">
+      <div class="project-card-image">
+        <div class="device-frame">
+          <img src="{{ url_for('static', filename='images/' + project.image) }}" alt="{{ project.title }} screenshot" loading="lazy">
+        </div>
+        <span class="status-badge">{{ 'Live' if project.live else 'Case Study' }}</span>
+      </div>
+      <div class="project-card-content">
+        <p class="category">{{ project.category }}</p>
+        <h3>{{ project.title }}</h3>
+        <p>{{ project.description }}</p>
+        <div class="tech-tags">
+          {% for tech in project.technologies[:3] %}
+          <span>{{ tech }}</span>
+          {% endfor %}
+        </div>
+        <div class="card-actions">
+          <a href="{{ url_for('project_detail', slug=project.id) }}" class="btn-sm primary">View Case Study</a>
+          {% if project.live and project.url %}
+          <a href="{{ project.url }}" target="_blank" rel="noopener" class="btn-sm">Visit Site</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

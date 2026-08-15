@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Contact — Entrix II{% endblock %}
+{% block description %}Get in touch to discuss your next project. We're ready to build.{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Contact</h1>
+  <p>Let's build something great together.</p>
+</div>
+
+<div class="contact-section">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash-message">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="{{ url_for('contact') }}">
+    <div class="form-group">
+      <label for="name">Name *</label>
+      <input type="text" id="name" name="name" required>
+    </div>
+    <div class="form-group">
+      <label for="email">Email *</label>
+      <input type="email" id="email" name="email" required>
+    </div>
+    <div class="form-group">
+      <label for="company">Company / Business</label>
+      <input type="text" id="company" name="company">
+    </div>
+    <div class="form-group">
+      <label for="service">Service Needed</label>
+      <select id="service" name="service">
+        <option value="">Select a service</option>
+        {% for service in services %}
+        <option value="{{ service.id }}" {% if request.args.get('service') == service.id %}selected{% endif %}>{{ service.title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="description">Project Description *</label>
+      <textarea id="description" name="description" required></textarea>
+    </div>
+    <div class="form-group">
+      <label for="budget">Budget Range (optional)</label>
+      <input type="text" id="budget" name="budget" placeholder="e.g., $5k–$10k">
+    </div>
+    <button type="submit" class="submit-btn">Send Message</button>
+  </form>
+</div>
+{% endblock %}

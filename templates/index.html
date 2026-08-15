@@ -1,0 +1,715 @@
+{% extends "base.html" %}
+
+{% block title %}Entrix — Web Development, Software & Digital Solutions{% endblock %}
+
+{% block description %}
+Entrix is a developer-led digital engineering studio building websites, web applications,
+business platforms, e-commerce systems and custom software solutions for businesses and organizations.
+{% endblock %}
+
+{% block content %}
+
+<!-- =========================================================
+     HERO
+========================================================= -->
+
+<section class="hero" id="hero">
+  <div class="hero-vignette" aria-hidden="true"></div>
+  <div class="hero-scanlines" aria-hidden="true"></div>
+
+  <div class="hero-inner">
+    <div class="hero-glass">
+
+      <p class="hero-eyebrow">
+        <span class="dot"></span>
+        DIGITAL ENGINEERING STUDIO
+      </p>
+
+      <h1 class="hero-title">
+        <span class="line">ENTRIX</span>
+        <span class="line">
+          WE BUILD THE DIGITAL SYSTEMS
+          <span class="hero-title-glitch" aria-hidden="true">BEHIND</span>
+          AMBITIOUS BUSINESSES.
+        </span>
+      </h1>
+
+      <p class="hero-copy">
+        Entrix is a developer-led digital studio focused on building websites,
+        web applications, e-commerce platforms, business systems and custom
+        digital products that help businesses operate and grow online.
+      </p>
+
+      <div class="hero-actions">
+        <a href="{{ url_for('work') }}" class="btn btn-primary">
+          <span>View Our Work</span>
+        </a>
+
+        <a href="{{ url_for('contact') }}" class="btn btn-ghost">
+          <span>Start a Project</span>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="hero-beam" aria-hidden="true"></div>
+
+  <div class="hero-hud" aria-hidden="true">
+    <span>ENTRIX // SYSTEM</span>
+    <span class="hud-status">ONLINE</span>
+  </div>
+
+  <div class="hero-scroll" aria-hidden="true">
+    <span>SCROLL</span>
+    <div class="hero-scroll-line"></div>
+  </div>
+</section>
+
+
+<!-- =========================================================
+     ABOUT ENTRIX
+========================================================= -->
+
+<section class="section-about">
+  <div class="container">
+
+    <div class="about-grid">
+
+      <div class="about-label">
+        <span>01</span>
+        <span>ABOUT ENTRIX</span>
+      </div>
+
+      <div class="about-content">
+
+        <h2 class="section-title">
+          More than websites.
+          <span>We build digital products.</span>
+        </h2>
+
+        <p>
+          Entrix is a developer-led digital engineering studio focused on
+          turning ideas, business problems and opportunities into functional
+          digital products.
+        </p>
+
+        <p>
+          From business websites and landing pages to full-stack web
+          applications, e-commerce platforms, dashboards, authentication
+          systems, payment integrations and custom business software,
+          we build solutions designed around the way each business actually works.
+        </p>
+
+        <p>
+          Our approach combines software development, UI/UX thinking,
+          business strategy, performance and search visibility instead of
+          treating a website as just another digital brochure.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
+<!-- =========================================================
+     WHAT WE BUILD
+========================================================= -->
+
+<section class="section-services">
+  <div class="container">
+
+    <p class="section-kicker">WHAT WE BUILD</p>
+
+    <h2 class="section-title">
+      Digital solutions built around real problems.
+    </h2>
+
+    <p class="section-sub">
+      From a company's first website to a complete custom platform,
+      Entrix handles the engineering behind the product.
+    </p>
+
+    <div class="services-snapshot">
+
+      {% for service in services[:8] %}
+
+      <div class="service-item">
+
+        <div class="service-icon-wrap">
+          <span class="service-icon">✦</span>
+          <div class="icon-glow"></div>
+        </div>
+
+        <h3>{{ service.title }}</h3>
+
+      </div>
+
+      {% endfor %}
+
+    </div>
+
+    <div class="text-center" style="margin-top: 2rem;">
+      <a href="{{ url_for('services') }}" class="btn btn-ghost">
+        Explore Our Services →
+      </a>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- =========================================================
+     CAPABILITIES
+========================================================= -->
+
+<section class="section-capabilities">
+
+  <div class="container">
+
+    <p class="section-kicker">CAPABILITIES</p>
+
+    <h2 class="section-title">
+      From interface to infrastructure.
+    </h2>
+
+    <div class="capability-grid">
+
+      <div class="capability-card">
+        <span class="capability-number">01</span>
+        <h3>Frontend Development</h3>
+        <p>
+          Responsive, interactive interfaces built with modern HTML,
+          CSS and JavaScript with attention to performance, accessibility
+          and user experience.
+        </p>
+      </div>
+
+      <div class="capability-card">
+        <span class="capability-number">02</span>
+        <h3>Backend Development</h3>
+        <p>
+          Server-side applications, APIs, databases, authentication,
+          business logic and scalable backend architecture.
+        </p>
+      </div>
+
+      <div class="capability-card">
+        <span class="capability-number">03</span>
+        <h3>Full-Stack Applications</h3>
+        <p>
+          Complete web applications connecting modern interfaces,
+          backend systems, databases, APIs and third-party services.
+        </p>
+      </div>
+
+      <div class="capability-card">
+        <span class="capability-number">04</span>
+        <h3>E-Commerce Systems</h3>
+        <p>
+          Online stores, product management, checkout systems,
+          digital products, payment processing and order workflows.
+        </p>
+      </div>
+
+      <div class="capability-card">
+        <span class="capability-number">05</span>
+        <h3>Business Platforms</h3>
+        <p>
+          Custom dashboards, admin systems, vendor platforms,
+          customer portals and internal business tools.
+        </p>
+      </div>
+
+      <div class="capability-card">
+        <span class="capability-number">06</span>
+        <h3>SEO & Performance</h3>
+        <p>
+          Search-friendly architecture, technical SEO, structured content,
+          performance optimization and Google Search visibility.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     FEATURED PROJECTS
+========================================================= -->
+
+<section class="section-featured">
+
+  <div class="container">
+
+    <p class="section-kicker">SELECTED WORK</p>
+
+    <h2 class="section-title">
+      Things we've built.
+    </h2>
+
+    <p class="section-sub">
+      Real projects across web development, business platforms,
+      e-commerce and digital solutions.
+    </p>
+
+    <div class="project-grid">
+
+      {% for project in projects[:6] %}
+
+      <div class="project-card {% if project.live %}live{% else %}case-study{% endif %}">
+
+        <div class="project-card-inner">
+
+          <div class="project-card-image">
+
+            <div class="glow-aura"></div>
+
+            <div class="device-frame">
+              <img
+                src="{{ url_for('static', filename='images/' + project.image) }}"
+                alt="{{ project.title }} website screenshot"
+                loading="lazy"
+              >
+            </div>
+
+            <span class="status-badge">
+              {{ 'Live' if project.live else 'Case Study' }}
+            </span>
+
+          </div>
+
+          <div class="project-card-content">
+
+            <p class="category">
+              {{ project.category }}
+            </p>
+
+            <h3>{{ project.title }}</h3>
+
+            <p>
+              {{ project.description[:180] }}…
+            </p>
+
+            <div class="card-actions">
+
+              <a
+                href="{{ url_for('project_detail', slug=project.id) }}"
+                class="btn-sm primary"
+              >
+                View Case Study
+              </a>
+
+              {% if project.live and project.url %}
+
+              <a
+                href="{{ project.url }}"
+                target="_blank"
+                rel="noopener"
+                class="btn-sm"
+              >
+                Visit Site
+              </a>
+
+              {% endif %}
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {% endfor %}
+
+    </div>
+
+    <div class="text-center" style="margin-top: 2rem;">
+      <a href="{{ url_for('work') }}" class="btn btn-primary">
+        Explore All Projects
+      </a>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     HOW WE WORK
+========================================================= -->
+
+<section class="section-process">
+
+  <div class="container">
+
+    <p class="section-kicker">OUR PROCESS</p>
+
+    <h2 class="section-title">
+      From idea to working product.
+    </h2>
+
+    <div class="process-grid">
+
+      <div class="process-item">
+        <span>01</span>
+        <h3>Understand</h3>
+        <p>
+          We understand your business, audience, goals and the problem
+          the product needs to solve.
+        </p>
+      </div>
+
+      <div class="process-item">
+        <span>02</span>
+        <h3>Design</h3>
+        <p>
+          We structure the user experience, interface and technical
+          requirements before development begins.
+        </p>
+      </div>
+
+      <div class="process-item">
+        <span>03</span>
+        <h3>Build</h3>
+        <p>
+          We develop the product, integrate the required systems and
+          continuously test the experience.
+        </p>
+      </div>
+
+      <div class="process-item">
+        <span>04</span>
+        <h3>Launch</h3>
+        <p>
+          We deploy the product, optimize its performance and make sure
+          everything is ready for real users.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     WHY ENTRIX
+========================================================= -->
+
+<section class="section-why">
+
+  <div class="container">
+
+    <p class="section-kicker">WHY ENTRIX</p>
+
+    <h2 class="section-title">
+      Engineering with a business mindset.
+    </h2>
+
+    <div class="why-grid">
+
+      <div class="why-item">
+        <span class="why-icon">⚡</span>
+        <h3>Developer-Driven</h3>
+        <p>
+          We don't just assemble templates. We build and customize
+          systems around the requirements of the business.
+        </p>
+      </div>
+
+      <div class="why-item">
+        <span class="why-icon">🎯</span>
+        <h3>Business Focused</h3>
+        <p>
+          Every feature should have a reason. We focus on solving
+          business problems and creating useful digital experiences.
+        </p>
+      </div>
+
+      <div class="why-item">
+        <span class="why-icon">🔧</span>
+        <h3>Full-Stack</h3>
+        <p>
+          Frontend, backend, databases, APIs, authentication,
+          integrations and deployment can all be handled in one place.
+        </p>
+      </div>
+
+      <div class="why-item">
+        <span class="why-icon">🚀</span>
+        <h3>Built to Evolve</h3>
+        <p>
+          We build with the future in mind so the product can grow
+          as the business grows.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     TECHNOLOGIES
+========================================================= -->
+
+<section class="section-tech">
+
+  <div class="container">
+
+    <p class="section-kicker">TECH STACK</p>
+
+    <h2 class="section-title">
+      Technologies we work with.
+    </h2>
+
+    <div class="tech-grid">
+
+      <span class="tech-badge">Python</span>
+      <span class="tech-badge">Flask</span>
+      <span class="tech-badge">JavaScript</span>
+      <span class="tech-badge">HTML5</span>
+      <span class="tech-badge">CSS3</span>
+      <span class="tech-badge">PostgreSQL</span>
+      <span class="tech-badge">MySQL</span>
+      <span class="tech-badge">SQLite</span>
+      <span class="tech-badge">REST APIs</span>
+      <span class="tech-badge">OAuth</span>
+      <span class="tech-badge">Git</span>
+      <span class="tech-badge">GitHub</span>
+      <span class="tech-badge">Paystack</span>
+      <span class="tech-badge">Google Search Console</span>
+      <span class="tech-badge">Technical SEO</span>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     WHO WE WORK WITH
+========================================================= -->
+
+<section class="section-clients">
+
+  <div class="container">
+
+    <p class="section-kicker">WHO WE WORK WITH</p>
+
+    <h2 class="section-title">
+      Built for businesses that want to move forward.
+    </h2>
+
+    <div class="client-types">
+
+      <span>Startups</span>
+      <span>Small Businesses</span>
+      <span>Real Estate</span>
+      <span>E-Commerce</span>
+      <span>Professional Services</span>
+      <span>Organizations</span>
+      <span>Creators</span>
+      <span>Growing Businesses</span>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     FOUNDER / PERSONAL
+========================================================= -->
+
+<section class="section-founder">
+
+  <div class="container">
+
+    <div class="founder-grid">
+
+      <div class="founder-visual">
+        <div class="founder-frame">
+          <span>ENTRIX</span>
+          <small>FOUNDER / DEVELOPER</small>
+        </div>
+      </div>
+
+      <div class="founder-content">
+
+        <p class="section-kicker">BEHIND ENTRIX</p>
+
+        <h2 class="section-title">
+          Built by a developer who believes software should solve problems.
+        </h2>
+
+        <p>
+          Entrix was created from a simple idea: businesses should be able
+          to use technology as a competitive advantage rather than simply
+          having a website because everyone else has one.
+        </p>
+
+        <p>
+          As a developer, I work across frontend development, backend
+          engineering, databases, APIs, authentication, payment systems,
+          deployment and SEO to turn ideas into working digital products.
+        </p>
+
+        <p>
+          The goal is straightforward — understand the problem,
+          build the right solution and create something that is actually
+          useful to the people who use it.
+        </p>
+
+        <a href="{{ url_for('contact') }}" class="btn btn-primary">
+          Work With Entrix
+        </a>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- =========================================================
+     FINAL STATEMENT / CTA
+========================================================= -->
+
+<section class="section-final">
+
+  <div class="final-grid" aria-hidden="true"></div>
+
+  <div class="container">
+
+    <div class="final-header">
+
+      <span class="final-index">08 / ENTRIX</span>
+
+      <p class="section-kicker">
+        THE NEXT PROJECT STARTS HERE
+      </p>
+
+      <h2 class="final-title">
+        YOUR IDEA
+        <span>DESERVES TO BE BUILT.</span>
+      </h2>
+
+      <p class="final-description">
+        From a simple business website to a complete digital platform,
+        Entrix turns ideas and business problems into technology that
+        people can actually use.
+      </p>
+
+      <div class="final-actions">
+
+        <a href="{{ url_for('contact') }}" class="btn btn-primary">
+          Start a Project
+          <span>↗</span>
+        </a>
+
+        <a href="{{ url_for('work') }}" class="btn btn-ghost">
+          Explore Our Work
+        </a>
+
+      </div>
+
+    </div>
+
+
+    <!-- FINAL STATEMENT -->
+
+    <div class="final-statement">
+
+      <div class="statement-line"></div>
+
+      <p>
+        We design.
+        We engineer.
+        We solve.
+      </p>
+
+      <h3>
+        ENTRIX
+      </h3>
+
+      <span>
+        DIGITAL ENGINEERING STUDIO
+      </span>
+
+    </div>
+
+
+    <!-- CONTACT INFORMATION -->
+
+    <div class="final-contact-grid">
+
+      <div>
+        <span class="final-label">WHAT WE DO</span>
+
+        <p>
+          Web Development<br>
+          Full-Stack Applications<br>
+          Custom Software<br>
+          E-Commerce<br>
+          Digital Solutions
+        </p>
+      </div>
+
+
+      <div>
+        <span class="final-label">WHAT WE BELIEVE</span>
+
+        <p>
+          Technology should solve problems,
+          create opportunities and help businesses
+          move forward.
+        </p>
+      </div>
+
+
+      <div>
+        <span class="final-label">START A CONVERSATION</span>
+
+        <a href="{{ url_for('contact') }}" class="final-contact-link">
+          Let's build something →
+        </a>
+      </div>
+
+    </div>
+
+
+    <!-- BOTTOM SYSTEM BAR -->
+
+    <div class="final-system">
+
+      <span>ENTRIX © 2026</span>
+
+      <span>WEB • SOFTWARE • DIGITAL</span>
+
+      <span>
+        <i class="status-dot"></i>
+        AVAILABLE FOR PROJECTS
+      </span>
+
+    </div>
+
+  </div>
+
+</section>
+
+{% endblock %}
