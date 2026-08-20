@@ -11,6 +11,23 @@ load_dotenv()  # reads variables from a .env file in the project root, if presen
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
 
+
+from flask import Flask, send_from_directory
+import os
+
+app = Flask(__name__)
+
+
+@app.route('/google1236e1335ed123fa.html')
+def google_verification():
+    return send_from_directory(
+        os.path.dirname(os.path.abspath(__file__)),
+        'google1236e1335ed123fa.html'
+    )
+
+
+# your other routes...
+
 # --- Email (contact form) configuration ---
 # Set these as environment variables — never hardcode credentials.
 #   MAIL_USERNAME   -> the Gmail address that sends the email (e.g. entrix2026@gmail.com)
