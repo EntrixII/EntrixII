@@ -1,22 +1,18 @@
 from PIL import Image
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 import os
 import smtplib
 from email.message import EmailMessage
 from datetime import datetime
 from dotenv import load_dotenv
 
-load_dotenv()  # reads variables from a .env file in the project root, if present
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
-
-
-from flask import Flask, send_from_directory
-import os
-
-app = Flask(__name__)
-
+app.config["SECRET_KEY"] = os.environ.get(
+    "SECRET_KEY",
+    "dev-secret-key-change-this"
+)
 
 @app.route('/google1236e1335ed123fa.html')
 def google_verification():
