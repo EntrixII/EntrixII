@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Entrix II Vision — Building the Future of Technology{% endblock %}
+
+{% block description %}
+Discover the Entrix II vision: from digital services today to phones, laptops and smart digital devices tomorrow, beginning with the Entrix Mirror X.
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Entrix II Vision",
+  "url": "{{ site.url }}/vision",
+  "description": "The future technology vision of Entrix II, including phones, laptops and digital devices such as the Entrix Mirror X.",
+  "about": {
+    "@type": "Thing",
+    "name": "Future technology and digital devices"
+  }
+}
+</script>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <div class="container">
+    <a href="{{ url_for('home') }}">Home</a>
+    <span>/</span>
+    <span>Vision</span>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- =========================================================
+     VISION HERO
+========================================================= -->
+<section class="vision-hero">
+  <div class="container vision-hero-grid">
+    <div>
+      <p class="eyebrow">THE NEXT CHAPTER</p>
+      <h1>
+        We don't just want to build the digital future.
+        We want to build what you use to experience it.
+      </h1>
+      <p class="vision-lead">
+        Entrix II is starting with software and digital services, but our ambition goes further.
+        We plan to create a technology ecosystem that reaches from the web into the devices people use every day.
+      </p>
+      <div class="vision-actions">
+        <a class="btn btn-primary" href="{{ url_for('contact') }}">Build with us</a>
+        <a class="btn btn-ghost" href="#roadmap">Explore the roadmap</a>
+      </div>
+    </div>
+    <div class="vision-orbit" aria-hidden="true">
+      <div class="orbit orbit-one"></div>
+      <div class="orbit orbit-two"></div>
+      <div class="orbit-core">
+        <span>ENTRIX</span>
+        <strong>II</strong>
+        <small>BEYOND SOFTWARE</small>
+      </div>
+      <span class="orbit-label label-web">WEB</span>
+      <span class="orbit-label label-ai">AI</span>
+      <span class="orbit-label label-devices">DEVICES</span>
+      <span class="orbit-label label-cloud">CLOUD</span>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     VISION INTRO
+========================================================= -->
+<section class="vision-intro section-pad">
+  <div class="container narrow-copy">
+    <p class="eyebrow">OUR VISION</p>
+    <h2>From digital solutions to World-built technology.</h2>
+    <p>
+
+      We should have companies building ambitious products for our realities,
+      our creativity and our future. Entrix II's long-term vision is to grow
+      from a digital engineering company into a technology company creating
+      software, hardware and connected experiences.
+    </p>
+    <p>
+      That journey will take time. We are starting where we are strongest:
+      building useful digital products, learning from real users and developing
+      the engineering foundation required for much bigger ideas.
+    </p>
+  </div>
+</section>
+
+<!-- =========================================================
+     ROADMAP
+========================================================= -->
+<section id="roadmap" class="vision-roadmap section-pad">
+  <div class="container">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">THE ROADMAP</p>
+        <h2>What we're building toward</h2>
+      </div>
+      <p>
+        Our roadmap is ambitious by design. The exact timing may change as
+        the company grows, but the direction stays clear.
+      </p>
+    </div>
+
+    <div class="roadmap-grid">
+
+      <!-- Card 1 -->
+      <article class="vision-card active">
+        <span class="vision-number">01</span>
+        <p class="vision-status">NOW</p>
+        <h3>Digital foundations</h3>
+        <p>
+          Websites, web applications, e-commerce, SEO, automation and software
+          that solve real business problems.
+        </p>
+        <ul>
+          <li>Digital products</li>
+          <li>Business software</li>
+          <li>Engineering systems</li>
+        </ul>
+      </article>
+
+      <!-- Card 2 -->
+      <article class="vision-card">
+        <span class="vision-number">02</span>
+        <p class="vision-status">NEXT</p>
+        <h3>Product innovation</h3>
+        <p>
+          Move from client solutions into original Entrix II products, platforms
+          and experiments across software and AI.
+        </p>
+        <ul>
+          <li>Original software</li>
+          <li>AI-powered products</li>
+          <li>Developer platforms</li>
+        </ul>
+      </article>
+
+      <!-- Card 3 (Featured) -->
+      <article class="vision-card feature">
+        <span class="vision-number">03</span>
+        <p class="vision-status">FIRST HARDWARE</p>
+        <h3>Entrix Mirror X</h3>
+        <p>
+          Our first planned hardware release: a flagship Entrix II digital device
+          concept that represents our step into consumer technology.
+        </p>
+        <ul>
+          <li>Entrix ecosystem</li>
+          <li>Smart connected experience</li>
+          <li>Designed for the future</li>
+        </ul>
+      </article>
+
+      <!-- Card 4 -->
+      <article class="vision-card">
+        <span class="vision-number">04</span>
+        <p class="vision-status">BEYOND</p>
+        <h3>A device ecosystem</h3>
+        <p>
+          Phones, laptops and other digital devices built around a coherent
+          Entrix experience rather than isolated products.
+        </p>
+        <ul>
+          <li>Phones</li>
+          <li>Laptops</li>
+          <li>Smart digital devices</li>
+        </ul>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     MIRROR X
+========================================================= -->
+<section class="mirror-x section-pad">
+  <div class="container mirror-grid">
+    <div class="mirror-device">
+      <div class="mirror-frame">
+        <div class="mirror-screen">
+          <span>ENTRIX II</span>
+          <strong>MIRROR X</strong>
+          <small>CONCEPT / FIRST RELEASE</small>
+        </div>
+      </div>
+      <div class="device-glow"></div>
+    </div>
+    <div class="mirror-copy">
+      <p class="eyebrow">PROJECT: MIRROR X</p>
+      <h2>The first name on the hardware roadmap.</h2>
+      <p>
+        <strong>Entrix Mirror X</strong> is the name we've chosen for our first
+        planned device release. It represents the point where the Entrix II vision
+        moves beyond websites and software into physical technology.
+      </p>
+      <p>
+        This is a future product concept, not a product currently available for sale.
+        We want to earn the right to build it by first becoming excellent at engineering,
+        product design, customer experience and reliable technology.
+      </p>
+      <div class="vision-note">
+        <span>01</span>
+        <div>
+          <strong>Build the foundation.</strong>
+          <p>Grow the team, skills and technology needed to make ambitious hardware possible.</p>
+        </div>
+      </div>
+      <div class="vision-note">
+        <span>02</span>
+        <div>
+          <strong>Build the ecosystem.</strong>
+          <p>Make Entrix software and services work beautifully together before taking them into hardware.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     VISION VALUES
+========================================================= -->
+<section class="vision-values section-pad">
+  <div class="container">
+    <p class="eyebrow">THE PRINCIPLES</p>
+    <h2>Ambition, but grounded in execution.</h2>
+    <div class="values-grid">
+      <div>
+        <strong>01 — Build for people</strong>
+        <p>Technology should make life and work easier, not simply look futuristic.</p>
+      </div>
+      <div>
+        <strong>02 — Start from ...</strong>
+        <p>Products should understand users, infrastructure, businesses and opportunities.</p>
+      </div>
+      <div>
+        <strong>03 — Engineer deeply</strong>
+        <p>We want beautiful products backed by reliability, performance and thoughtful engineering.</p>
+      </div>
+      <div>
+        <strong>04 — Think globally</strong>
+        <p>WHY GO INTO THE FUTURE, IF YOU DON'T TRUST THE FUTURE.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     VISION CTA
+========================================================= -->
+<section class="vision-cta section-pad">
+  <div class="container">
+    <p class="eyebrow">THE FUTURE IS A PROJECT</p>
+    <h2>We're building Entrix II one ambitious step at a time.</h2>
+    <p>Today, that means digital products. Tomorrow, it can mean devices in your hands.</p>
+    <a class="btn btn-primary" href="{{ url_for('contact') }}">Start the journey with us</a>
+  </div>
+</section>
+
+{% endblock %}

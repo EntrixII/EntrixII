@@ -113,6 +113,8 @@ def inject_globals():
 def home(): return render_template('index.html')
 @app.route('/about')
 def about(): return render_template('about.html')
+@app.route('/vision')
+def vision(): return render_template('vision.html')
 @app.route('/services')
 def services(): return render_template('services.html')
 @app.route('/work')
@@ -159,7 +161,7 @@ def sitemap():
     pages=[]
     def add(endpoint, **kwargs):
         pages.append({'url':url_for(endpoint,_external=True,**kwargs),'lastmod':now,'changefreq':'weekly','priority':'0.7'})
-    for endpoint in ['home','about','services','work','contact','insights']:
+    for endpoint in ['home','about','vision','services','work','contact','insights']:
         add(endpoint); pages[-1]['priority']='0.9' if endpoint in ('home','services') else '0.7'
     for s in SERVICES: add('service_detail',slug=s['slug']); pages[-1]['priority']='0.9'
     for r in REGIONS: add('region_detail',slug=r['slug']); pages[-1]['priority']='0.8'
