@@ -1,10 +1,37 @@
 {% extends "base.html" %}
 
-{% block title %}Entrix — Web Development, Software & Digital Solutions{% endblock %}
+{% block title %}Entrix — Web Development, Software & Digital Solutions
+<!-- =========================================================
+     NIGERIA & AFRICA SEO LANDING SECTION
+========================================================= -->
+<section class="about-seo-footer">
+  <div class="container">
+    <p class="section-kicker">WEB DEVELOPMENT / NIGERIA / AFRICA</p>
+    <h2>Web development, software and digital services for businesses in Nigeria and Africa.</h2>
+    <p>Entrix II helps businesses build and improve their digital presence through web development, website design, e-commerce development, web applications, custom software, SEO, UI/UX design, AI automation, API integration, payment integration and website maintenance.</p>
+    <p>Explore our <a href="{{ url_for('services') }}">digital services</a>, read practical <a href="{{ url_for('insights') }}">SEO and website guides</a>, or view <a href="{{ url_for('work') }}">real projects and case studies</a>.</p>
+    <div class="keyword-cloud">{% for service in services %}<a href="{{ url_for('service_detail',slug=service.slug) }}">{{ service.title }}</a>{% endfor %}</div>
+  </div>
+</section>
+
+{% endblock %}
 
 {% block description %}
-Entrix is a developer-led digital engineering studio building websites, web applications,
-business platforms, e-commerce systems and custom software solutions for businesses and organizations.
+Entrix II is a developer-led digital engineering studio building websites, web applications, e-commerce systems, custom software, SEO and digital solutions for businesses in Nigeria and across Africa.
+
+<!-- =========================================================
+     NIGERIA & AFRICA SEO LANDING SECTION
+========================================================= -->
+<section class="about-seo-footer">
+  <div class="container">
+    <p class="section-kicker">WEB DEVELOPMENT / NIGERIA / AFRICA</p>
+    <h2>Web development, software and digital services for businesses in Nigeria and Africa.</h2>
+    <p>Entrix II helps businesses build and improve their digital presence through web development, website design, e-commerce development, web applications, custom software, SEO, UI/UX design, AI automation, API integration, payment integration and website maintenance.</p>
+    <p>Explore our <a href="{{ url_for('services') }}">digital services</a>, read practical <a href="{{ url_for('insights') }}">SEO and website guides</a>, or view <a href="{{ url_for('work') }}">real projects and case studies</a>.</p>
+    <div class="keyword-cloud">{% for service in services %}<a href="{{ url_for('service_detail',slug=service.slug) }}">{{ service.title }}</a>{% endfor %}</div>
+  </div>
+</section>
+
 {% endblock %}
 
 {% block content %}
@@ -710,6 +737,20 @@ business platforms, e-commerce systems and custom software solutions for busines
 
   </div>
 
+</section>
+
+
+<!-- =========================================================
+     NIGERIA & AFRICA SEO LANDING SECTION
+========================================================= -->
+<section class="about-seo-footer">
+  <div class="container">
+    <p class="section-kicker">WEB DEVELOPMENT / NIGERIA / AFRICA</p>
+    <h2>Web development, software and digital services for businesses in Nigeria and Africa.</h2>
+    <p>Entrix II helps businesses build and improve their digital presence through web development, website design, e-commerce development, web applications, custom software, SEO, UI/UX design, AI automation, API integration, payment integration and website maintenance.</p>
+    <p>Explore our <a href="{{ url_for('services') }}">digital services</a>, read practical <a href="{{ url_for('insights') }}">SEO and website guides</a>, or view <a href="{{ url_for('work') }}">real projects and case studies</a>.</p>
+    <div class="keyword-cloud">{% for service in services %}<a href="{{ url_for('service_detail',slug=service.slug) }}">{{ service.title }}</a>{% endfor %}</div>
+  </div>
 </section>
 
 {% endblock %}

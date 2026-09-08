@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ industry.title }} | Entrix II{% endblock %}
+{% block description %}{{ industry.intro }} Entrix II provides practical web development, software and digital product services for {{ industry.name|lower }} businesses.{% endblock %}
+{% block schema %}
+<script type="application/ld+json">{{ {'@context':'https://schema.org','@type':'Service','name':industry.title,'serviceType':'Digital services for ' + industry.name,'provider':{'@type':'Organization','name':site.name,'url':site.url},'areaServed':[{'@type':'Country','name':'Nigeria'},{'@type':'Continent','name':'Africa'}],'url':site.url + '/industries/' + industry.slug} | tojson }}</script>
+{% endblock %}
+{% block breadcrumbs %}<nav class="breadcrumbs container" aria-label="Breadcrumb"><a href="{{ url_for('home') }}">Home</a><span>›</span><span aria-current="page">{{ industry.name }}</span></nav>{% endblock %}
+{% block content %}
+<div class="page-header">
+<p class="section-kicker">ENTRIX II / INDUSTRY</p>
+<h1>{{ industry.title }}</h1>
+<p>{{ industry.intro }}</p>
+</div>
+<section class="section-about"><div class="container"><div class="about-grid"><div class="about-label"><span>01</span><span>INDUSTRY CONTEXT</span></div><div class="about-content"><h2 class="section-title">Digital systems for <span>{{ industry.name }}.</span></h2>{% for p in industry.body %}<p>{{ p }}</p>{% endfor %}<a href="{{ url_for('contact') }}" class="btn btn-primary">Discuss Your Project →</a></div></div></div></section>
+<section class="section-services-detail"><div class="container"><p class="section-kicker">RELEVANT SERVICES</p><h2 class="section-title">What we can build <span>for {{ industry.name|lower }}.</span></h2><div class="service-detail-grid">{% for service in services %}<article class="service-detail-card"><h2><a href="{{ url_for('service_detail',slug=service.slug) }}">{{ service.title }}</a></h2><p>{{ service.short }}</p><a href="{{ url_for('service_detail',slug=service.slug) }}" class="service-detail-link">Learn more →</a></article>{% endfor %}</div></div></section>
+<section class="section-process"><div class="container"><p class="section-kicker">MORE INDUSTRIES</p><div class="tech-grid">{% for item in industries if item.slug != industry.slug %}<a class="tech-badge" href="{{ url_for('industry_detail',slug=item.slug) }}">{{ item.name }}</a>{% endfor %}</div></div></section>
+{% endblock %}

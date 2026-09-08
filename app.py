@@ -1,5 +1,4 @@
-from PIL import Image
-from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory, abort
 import os
 import smtplib
 from email.message import EmailMessage
@@ -9,278 +8,168 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get(
-    "SECRET_KEY",
-    "dev-secret-key-change-this"
-)
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key-change-this")
 
 @app.route('/google1236e1335ed123fa.html')
 def google_verification():
-    return send_from_directory(
-        os.path.dirname(os.path.abspath(__file__)),
-        'google1236e1335ed123fa.html'
-    )
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'google1236e1335ed123fa.html')
 
-
-# your other routes...
-
-# --- Email (contact form) configuration ---
-# Set these as environment variables — never hardcode credentials.
-#   MAIL_USERNAME   -> the Gmail address that sends the email (e.g. entrix2026@gmail.com)
-#   MAIL_PASSWORD   -> a Gmail App Password (NOT your normal Gmail password)
-#   MAIL_RECIPIENT  -> where the message should land (defaults to entrix2026@gmail.com)
 MAIL_SERVER = 'smtp.gmail.com'
 MAIL_PORT = 587
 MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
 MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
 MAIL_RECIPIENT = os.environ.get('MAIL_RECIPIENT', 'entrix2026@gmail.com')
 
-
-def send_contact_email(form):
-    """Send the contact form submission via Gmail SMTP. Returns True on success."""
-    if not MAIL_USERNAME or not MAIL_PASSWORD:
-        app.logger.warning('MAIL_USERNAME / MAIL_PASSWORD not set — contact email not sent.')
-        return False
-
-    name = form.get('name', '').strip()
-    email = form.get('email', '').strip()
-    company = form.get('company', '').strip()
-    service = form.get('service', '').strip()
-    description = form.get('description', '').strip()
-    budget = form.get('budget', '').strip()
-
-    service_title = next((s['title'] for s in SERVICES if s['id'] == service), service)
-
-    msg = EmailMessage()
-    msg['Subject'] = f'New project inquiry from {name or "website visitor"}'
-    msg['From'] = MAIL_USERNAME
-    msg['To'] = MAIL_RECIPIENT
-    if email:
-        msg['Reply-To'] = email
-
-    msg.set_content(
-        "New message from the Entrix II contact form\n"
-        "--------------------------------------------\n"
-        f"Name:      {name}\n"
-        f"Email:     {email}\n"
-        f"Company:   {company or '—'}\n"
-        f"Service:   {service_title or '—'}\n"
-        f"Budget:    {budget or '—'}\n"
-        "\n"
-        "Project description:\n"
-        f"{description}\n"
-    )
-
-    try:
-        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=10) as smtp:
-            smtp.starttls()
-            smtp.login(MAIL_USERNAME, MAIL_PASSWORD)
-            smtp.send_message(msg)
-        return True
-    except Exception as exc:
-        app.logger.error(f'Failed to send contact email: {exc}')
-        return False
-
-
-# Site configuration
 SITE = {
     'name': 'Entrix II',
-    'url': 'https://entrixii.com',  # change to actual domain
-    'tagline': 'building what\'s next',
+    'url': 'https://entrixii.com.ng',
+    'tagline': "building what's next",
 }
 
 SOCIAL = {
     'github': 'https://github.com/EntrixII',
     'twitter': 'https://twitter.com/is_real999',
     'linkedin': 'https://www.linkedin.com/in/entrix-the-second-b7586b42b/',
-    'instagram': '#',
+    'instagram': 'https://instagram.com/entrix_the_second',
     'facebook': '#',
     'whatsapp': 'https://wa.me/2347068133655',
     'email': 'entrix2026@gmail.com',
 }
 
-# Project data
-PROJECTS = [
-    {
-        'id': 'jecyani-properties',
-        'title': 'Jecyani Properties',
-        'category': 'Real Estate',
-        'url': 'https://jecyaniproperties.com/',
-        'live': True,
-        'description': 'A modern real estate platform showcasing properties with a sleek, trust-driven interface. Built for speed and conversion.',
-        'image': 'jacyani.jpg',
-        'technologies': ['Flask', 'Tailwind CSS', 'JavaScript', 'PostgreSQL'],
-        'challenge': 'The client needed a digital presence that reflected their premium property portfolio while being easy to manage.',
-        'solution': 'We built a custom CMS with property listings, advanced search, and a streamlined contact system.',
-    },
-    {
-        'id': 'crownbee-global',
-        'title': 'Crownbee Global Services',
-        'category': 'Real Estate',
-        'url': 'https://crownbeeglobalservices.com/',
-        'live': True,
-        'description': 'A corporate website for international real estate services, emphasizing trust and global reach.',
-        'image': 'crownbee.jpg',
-        'technologies': ['React', 'Node.js', 'MongoDB', 'AWS'],
-        'challenge': 'Showcasing a diverse portfolio across multiple countries with a unified brand voice.',
-        'solution': 'A multi-language site with dynamic content blocks and a powerful backend.',
-    },
-    {
-        'id': 'verrazzano',
-        'title': 'Verrazzano',
-        'category': 'Furniture',
-        'url': None,
-        'live': False,
-        'description': 'A high-end furniture brand concept. This case study explores e‑commerce and immersive product presentation.',
-        'image': 'image.WebP',
-        'technologies': ['Next.js', 'Three.js', 'Stripe', 'GraphQL'],
-        'challenge': 'Creating a digital showroom that feels as luxurious as the physical products.',
-        'solution': 'A 3D product viewer with AR preview, integrated with a headless CMS for inventory.',
-    },
-    {
-        'id': 'michie-plus',
-        'title': 'Michie Plus',
-        'category': 'E‑commerce',
-        'url': 'https://michieplus.com.ng/',
-        'live': True,
-        'description': 'A full-featured e‑commerce platform for fashion and lifestyle. Currently a case study of scalable architecture.',
-        'image': 'michieplus.jpg',
-        'technologies': ['Vue.js', 'Django', 'PostgreSQL', 'Redis', 'Celery'],
-        'challenge': 'Handling high traffic during flash sales with a seamless checkout experience.',
-        'solution': 'Microservices architecture with a message queue for order processing, and a responsive Vue storefront.',
-    },
-    {
-        'id': 'becca-treats',
-        'title': 'Becca Treats',
-        'category': 'Food & Treats',
-        'url': None,
-        'live': False,
-        'description': 'A delightful brand for homemade treats. This case study focuses on brand storytelling and online ordering.',
-        'image': 'image.WebP',
-        'technologies': ['WordPress', 'WooCommerce', 'Custom Theme', 'SEO'],
-        'challenge': 'Translating the warmth of a local bakery into a digital experience.',
-        'solution': 'A custom WordPress theme with a focus on visuals and a simple ordering flow.',
-    }
+SERVICES = [
+    {'id':'website-development','slug':'web-development','title':'Web Development','icon':'💻','short':'Professional business websites and high-performance web builds for Nigerian and African businesses.','description':'Custom, responsive websites engineered for speed, trust, search visibility and conversions. We build company websites, corporate sites, landing pages and content-driven websites without unnecessary bloat.','features':['Responsive, mobile-first builds','Semantic, crawlable architecture','Fast-loading pages and Core Web Vitals focus','CMS and custom backend options','Analytics and Search Console readiness'],'audience':'businesses, startups, professionals and organizations','faqs':[('How much does web development cost in Nigeria?','Pricing depends on scope, number of pages, content, integrations and whether the site needs a custom backend. We scope projects before quoting so the price matches the actual work.'),('Can you build a website for a Nigerian business?','Yes. Entrix II works with businesses in Nigeria and can build sites around local audiences, mobile usage, contact workflows and payment requirements.')], 'keywords':['web development Nigeria','web developer Nigeria','website development Nigeria','web development company Nigeria','web development Africa']},
+    {'id':'website-design','slug':'website-design','title':'Website Design & Redesign','icon':'🎨','short':'Modern website design and redesign services focused on credibility, usability and conversion.','description':'We redesign outdated websites and create new interfaces that make businesses easier to understand, trust and contact. Design decisions are connected to UX, performance and search—not decoration alone.','features':['UI/UX direction and page hierarchy','Responsive layouts','Conversion-focused calls to action','Accessibility-conscious components','Design systems for consistent pages'],'audience':'businesses with outdated or underperforming websites','faqs':[('Can you redesign an existing website?','Yes. We can audit the current structure, identify usability and performance problems, then redesign or rebuild the parts that matter most.'),('Will redesigning my site hurt SEO?','A redesign can preserve or improve SEO when URLs, metadata, redirects, internal links and important content are handled carefully.')], 'keywords':['website design Nigeria','web design Nigeria','website redesign Nigeria','web designer Nigeria','website design Africa']},
+    {'id':'ecommerce','slug':'ecommerce-development','title':'E-commerce Development','icon':'🛒','short':'Online stores, product catalogs, checkout flows and payment integrations for African businesses.','description':'Build an online store that can manage products, customers, orders and payments. We can integrate business-specific workflows and Nigerian payment providers where appropriate.','features':['Product and category architecture','Cart and checkout flows','Payment gateway integration','Order and customer workflows','Mobile-first shopping experience'],'audience':'retailers, brands, creators and businesses selling online','faqs':[('Can you integrate Paystack?','Yes. Paystack can be integrated where it fits the project, alongside other supported payment or business APIs.'),('Can you build an e-commerce site for Nigeria?','Yes. We can tailor the storefront, checkout, currency, payment flow and delivery information to the business and its customers.')], 'keywords':['ecommerce development Nigeria','online store development Nigeria','ecommerce website Nigeria','Paystack website development','ecommerce development Africa']},
+    {'id':'web-applications','slug':'web-applications','title':'Web Application Development','icon':'🧩','short':'Custom web applications, portals, dashboards and business platforms built around real workflows.','description':'We build software that does more than present information: authenticated dashboards, portals, booking systems, customer areas, admin systems and database-driven applications.','features':['Authentication and user roles','Dashboards and admin panels','Database-driven workflows','REST API integrations','Business rules and automation'],'audience':'startups, SMEs and organizations with custom workflows','faqs':[('What is a web application?','A web application lets users perform tasks online—such as logging in, managing records, booking services, processing orders or using a dashboard.'),('Can you connect an app to an existing API?','Yes. API integration can connect the application to payment, messaging, analytics, CRM and other external systems.')], 'keywords':['web application development Nigeria','web app developer Nigeria','custom web applications Nigeria','software development Nigeria','web applications Africa']},
+    {'id':'custom-software','slug':'custom-software-development','title':'Custom Software Development','icon':'⚙️','short':'Business software designed around workflows that off-the-shelf tools cannot handle well.','description':'Custom software can replace spreadsheets, disconnected tools and repetitive manual processes with a system built around the way a business actually operates.','features':['Requirements discovery','Custom business logic','Admin and staff dashboards','Database architecture','Deployment and maintainable code'],'audience':'businesses with specialized processes or operational bottlenecks','faqs':[('When should a business consider custom software?','Custom software makes sense when existing tools cannot support an important workflow, when manual work is expensive, or when the business needs tighter control of its data and processes.'),('Do you build internal business tools?','Yes. Internal dashboards, portals, workflow tools and database-backed systems are common custom software projects.')], 'keywords':['custom software development Nigeria','software company Nigeria','business software Nigeria','software developers Nigeria','custom software Africa']},
+    {'id':'seo','slug':'seo-services','title':'SEO Services','icon':'🔍','short':'Technical, on-page and content-focused SEO for businesses targeting Nigeria and African markets.','description':'SEO starts with a site that search engines can crawl and users can trust. We work on technical foundations, page targeting, internal links, metadata, structured data, performance and useful content.','features':['Technical SEO audits','On-page optimization','Internal linking and information architecture','Structured data implementation','Search Console and indexing setup'],'audience':'businesses that want qualified organic traffic','faqs':[('Can you help my website rank on Google in Nigeria?','We can improve the technical and content foundations that influence organic visibility, but no ethical SEO provider can guarantee a specific Google position.'),('How long does SEO take?','SEO is cumulative. Technical fixes can be discovered relatively quickly, while competitive queries usually require sustained useful content, authority and ongoing optimization.')], 'keywords':['SEO Nigeria','SEO services Nigeria','SEO company Nigeria','technical SEO Nigeria','SEO Africa']},
+    {'id':'mobile-applications','slug':'mobile-app-development','title':'Mobile App Development','icon':'📱','short':'Mobile-focused digital experiences and app-ready interfaces for businesses and products.','description':'We design and develop mobile-first experiences and progressive web applications, with product architecture that can support a future native app where needed.','features':['Mobile-first product UX','Progressive web applications','Responsive application interfaces','API-backed experiences','Cross-device testing'],'audience':'businesses and startups building mobile customer experiences','faqs':[('Do you build mobile apps?','We build mobile-first web experiences and progressive web applications. Native app requirements can be scoped separately depending on the product.'),('Can a website behave like an app?','A well-built progressive web app can provide app-like navigation and functionality while remaining accessible through the web.')], 'keywords':['mobile app development Nigeria','mobile application development Nigeria','PWA development Nigeria','mobile app developer Nigeria','app development Africa']},
+    {'id':'ui-ux','slug':'ui-ux-design','title':'UI/UX Design','icon':'🎯','short':'User interface and user experience design for websites, web apps and digital products.','description':'We turn business requirements into clear user journeys, page structures and interfaces that reduce friction and make digital products easier to use.','features':['User journeys and information architecture','Wireframes and interface concepts','Responsive component design','Usability-focused layouts','Design handoff for development'],'audience':'teams creating or improving digital products','faqs':[('Do you design before development?','Yes. For larger projects, clarifying the user journey and interface before development reduces rework and helps define the right product scope.'),('Can you improve an existing interface?','Yes. Existing products can be reviewed for navigation, hierarchy, clarity and conversion opportunities.')], 'keywords':['UI UX design Nigeria','UX designer Nigeria','UI design Nigeria','product design Nigeria','UX design Africa']},
+    {'id':'ai-automation','slug':'ai-automation','title':'AI & Business Automation','icon':'🤖','short':'Practical AI integrations and automation that reduce repetitive work and improve digital workflows.','description':'We integrate AI and automation where they solve a real business problem: classification, content workflows, support tools, data processing, notifications and repetitive operational tasks.','features':['AI-powered website features','Workflow automation','Third-party API integrations','Data processing workflows','Human-in-the-loop systems'],'audience':'businesses looking to reduce repetitive digital work','faqs':[('Can AI be added to an existing website?','Yes, if there is a useful workflow for it. AI can be integrated into support, search, content, internal tools and other product features.'),('Do you automate business tasks?','Yes. Automation can connect forms, databases, APIs, email, notifications and AI services into a repeatable workflow.')], 'keywords':['AI automation Nigeria','AI development Nigeria','business automation Nigeria','AI integration Nigeria','AI services Africa']},
+    {'id':'api-integration','slug':'api-integration','title':'API & System Integration','icon':'🔗','short':'Connect websites and applications to payments, CRMs, messaging, analytics and other services.','description':'We integrate APIs so systems can exchange data reliably. This can include payments, authentication, email, messaging, maps, analytics and business platforms.','features':['REST API integration','Webhook handling','Authentication and tokens','Data mapping and validation','Error handling and monitoring'],'audience':'businesses connecting multiple digital systems','faqs':[('Can you integrate third-party APIs?','Yes. We can connect a website or application to external services when their API and terms support the required workflow.'),('Can APIs automate payments or notifications?','Yes. APIs and webhooks can trigger actions such as payment confirmation, order updates and notifications.')], 'keywords':['API integration Nigeria','API development Nigeria','software integration Nigeria','web API developer Nigeria','API integration Africa']},
+    {'id':'payment-integration','slug':'payment-integration','title':'Payment Integration','icon':'💳','short':'Secure payment flows and payment-provider integrations for websites and applications.','description':'We integrate supported payment providers into websites and applications, with attention to checkout UX, transaction verification, webhooks and order state.','features':['Payment checkout integration','Transaction verification','Webhook handling','Order/payment status logic','Test and production configuration'],'audience':'businesses accepting payments online','faqs':[('Can you integrate Nigerian payment gateways?','Yes. The right provider depends on the project, account requirements and the payment methods the business needs.'),('How do you verify online payments?','A robust integration verifies transactions server-side and handles provider callbacks/webhooks rather than trusting only the browser response.')], 'keywords':['payment integration Nigeria','online payment integration Nigeria','Paystack integration Nigeria','Flutterwave integration Nigeria','payment gateway integration Africa']},
+    {'id':'maintenance','slug':'website-maintenance','title':'Website Maintenance & Support','icon':'🛠️','short':'Ongoing website updates, technical fixes, performance improvements and SEO maintenance.','description':'Websites need maintenance after launch. We can help with updates, bug fixes, performance work, content changes, technical SEO and feature improvements.','features':['Bug fixes and updates','Performance monitoring','Technical SEO maintenance','Content and feature changes','Security-conscious maintenance practices'],'audience':'businesses with an existing website or application','faqs':[('Can you maintain a website built by someone else?','Yes. We can review the codebase and hosting setup first, then scope maintenance based on what is safely maintainable.'),('Do you offer ongoing SEO maintenance?','Yes. Ongoing work can include technical fixes, content improvements, internal linking and monitoring of search visibility.')], 'keywords':['website maintenance Nigeria','website support Nigeria','website management Nigeria','web maintenance services Nigeria','website maintenance Africa']},
 ]
 
-SERVICES = [
-    {
-        'id': 'website-development', 'title': 'Website Development', 'icon': '💻',
-        'description': 'Custom-built, high-performance websites engineered from scratch — no bloated page builders, no cookie-cutter templates.',
-        'features': ['Responsive, mobile-first builds', 'Fast-loading, SEO-ready architecture', 'Scalable Flask & Python backends'],
-    },
-    {
-        'id': 'website-design', 'title': 'Website Design & Redesign', 'icon': '🎨',
-        'description': 'Modern interfaces and full redesigns that turn outdated sites into fast, credible digital storefronts.',
-        'features': ['Brand-aligned visual design', 'UX audits & redesign strategy', 'Conversion-focused layouts'],
-    },
-    {
-        'id': 'web-applications', 'title': 'Web Applications', 'icon': '🧩',
-        'description': 'Full-stack applications with real business logic — dashboards, portals, booking systems and internal tools.',
-        'features': ['Custom backend logic & APIs', 'User authentication & roles', 'Database-driven features'],
-    },
-    {
-        'id': 'mobile-applications', 'title': 'Mobile Applications', 'icon': '📱',
-        'description': 'Mobile-friendly experiences and app-like interfaces that work seamlessly across devices.',
-        'features': ['Responsive progressive web apps', 'Cross-device compatibility', 'App-like performance & feel'],
-    },
-    {
-        'id': 'ecommerce', 'title': 'E-commerce', 'icon': '🛒',
-        'description': 'Complete online stores built for real transactions — product catalogs, checkout and payment integration.',
-        'features': ['Product & inventory management', 'Secure checkout & payments', 'Order & customer management'],
-    },
-    {
-        'id': 'ui-ux', 'title': 'UI/UX', 'icon': '🎯',
-        'description': 'Interfaces designed around real users — clear, usable and built to convert visitors into customers.',
-        'features': ['Wireframing & prototyping', 'Usability-first interface design', 'Accessibility & responsive layouts'],
-    },
-    {
-        'id': 'seo', 'title': 'SEO', 'icon': '🔍',
-        'description': "Technical and on-page SEO that helps businesses get found, not just built.",
-        'features': ['Technical SEO & site architecture', 'Metadata, schema & structured data', 'Search Console setup & monitoring'],
-    },
-    {
-        'id': 'ai-automation', 'title': 'AI & Automation', 'icon': '🤖',
-        'description': 'Practical AI integrations and automated workflows that save time and reduce manual work.',
-        'features': ['AI-powered features & chat tools', 'Workflow & task automation', 'Third-party API integrations'],
-    },
-    {
-        'id': 'custom-software', 'title': 'Custom Software / Digital Solutions', 'icon': '⚙️',
-        'description': "Bespoke software built around a specific business workflow that off-the-shelf tools can't solve.",
-        'features': ['Business-specific platforms', 'Admin & vendor dashboards', 'Scalable, maintainable architecture'],
-    },
+REGIONS = [
+    {'slug':'nigeria','name':'Nigeria','title':'Digital Services & Web Development in Nigeria','intro':'Entrix II is a developer-led digital studio serving businesses across Nigeria with websites, software, e-commerce, SEO, automation and other digital services.','body':['Nigerian businesses often need more than a brochure website. The right digital system may need mobile-first UX, local payment integrations, lead capture, business dashboards, search visibility and room to grow.','Entrix II builds around those requirements rather than forcing every business into the same template. Projects can range from a professional company website to a custom web application or e-commerce platform.'], 'keywords':['web development Nigeria','digital agency Nigeria','software development Nigeria','SEO Nigeria','website design Nigeria']},
+    {'slug':'africa','name':'Africa','title':'Digital Services & Software Development for African Businesses','intro':'Entrix II builds digital products for businesses and organizations across African markets, with an emphasis on performance, mobile usability and practical business workflows.','body':['African businesses operate across different markets, payment providers, languages and customer behaviors. A useful digital product needs flexible architecture and a clear understanding of the business it supports.','Entrix II can work remotely with African clients on websites, e-commerce, custom software, SEO, API integrations and automation.'], 'keywords':['web development Africa','software development Africa','digital agency Africa','website design Africa','SEO Africa']},
+    {'slug':'abuja','name':'Abuja','title':'Web Development & Digital Services in Abuja','intro':'Entrix II provides website development, software, e-commerce, SEO and digital product services for businesses in Abuja and clients across Nigeria.','body':['For Abuja businesses, a website often needs to support trust, lead generation and professional presentation while working reliably on mobile devices. We build digital experiences around those goals.','From corporate websites and real estate platforms to custom dashboards and online stores, each project is scoped around the business workflow and audience.'], 'keywords':['web development Abuja','web design Abuja','software development Abuja','SEO Abuja','website developer Abuja']},
+    {'slug':'lagos','name':'Lagos','title':'Web Development & Digital Services in Lagos','intro':'Entrix II works remotely with Lagos businesses on high-performance websites, e-commerce platforms, web applications, SEO and custom software.','body':['Lagos businesses compete in a crowded digital market, so speed, clarity, trust and discoverability matter. We combine technical development with UX and SEO fundamentals to create useful digital products.','Projects can be built for startups, SMEs, professional services, retail brands and organizations that need a stronger online presence or a custom digital workflow.'], 'keywords':['web development Lagos','web design Lagos','software development Lagos','SEO Lagos','website developer Lagos']},
+    {'slug':'kaduna','name':'Kaduna','title':'Web Development & Digital Services in Kaduna','intro':'Entrix II provides web development, e-commerce, SEO and custom software services for Kaduna businesses and organizations.','body':['A strong digital presence can help Kaduna businesses reach customers beyond their immediate area. We build responsive websites and applications that make services, products and contact paths clear.','Whether the project is a company website, online store, dashboard or custom business system, the goal is a maintainable product that supports the organization after launch.'], 'keywords':['web development Kaduna','web design Kaduna','software development Kaduna','SEO Kaduna','website developer Kaduna']},
 ]
+
+
+INDUSTRIES = [
+    {'slug':'real-estate','name':'Real Estate','title':'Web Development & Digital Services for Real Estate Businesses','intro':'Websites, property platforms, lead-generation systems and SEO for real estate businesses in Nigeria and Africa.','body':['Real estate websites need more than attractive property photos. Buyers and investors need clear listings, location information, trust signals and simple ways to enquire.','Entrix II can build property websites, listing systems, lead forms, search interfaces and supporting SEO content around the way an agency or developer actually works.']},
+    {'slug':'ecommerce-retail','name':'E-commerce & Retail','title':'E-commerce Development for Retail Businesses in Nigeria','intro':'Online stores, payment integrations, product catalogs and conversion-focused shopping experiences for Nigerian retailers.','body':['A useful retail website should make products easy to discover, understand and buy on a phone. Checkout, payment verification and order handling are part of the product—not afterthoughts.','We build online stores and supporting systems that can grow from a simple catalog into a more capable commerce platform.']},
+    {'slug':'professional-services','name':'Professional Services','title':'Websites & Digital Systems for Professional Services Firms','intro':'Professional websites, lead-generation systems and custom web tools for consultants, firms and service businesses.','body':['Professional service businesses compete on credibility. A strong website should explain expertise clearly, make enquiries easy and provide useful evidence such as case studies and service information.','Entrix II combines design, development and search foundations to create a digital presence that supports business development.']},
+    {'slug':'hospitality','name':'Hospitality','title':'Web Development for Hotels, Restaurants & Hospitality Businesses','intro':'Mobile-friendly websites, booking flows, menus, online ordering and digital systems for hospitality businesses.','body':['Hospitality customers often make decisions on mobile. Fast pages, clear offers, location details, menus, booking or enquiry paths and strong visual presentation all matter.','We can build a hospitality website around the customer journey while keeping the technical foundation maintainable.']},
+    {'slug':'startups','name':'Startups','title':'Web Development & MVP Software for Startups','intro':'MVP websites, web applications, dashboards and product interfaces for startups building and validating digital products.','body':['Startups need to move quickly without building a technical dead end. We focus on the smallest useful architecture that can validate an idea while leaving room for future features.','Projects can include landing pages, MVPs, authenticated applications, dashboards, APIs and payment flows.']},
+    {'slug':'education','name':'Education','title':'Websites & Web Applications for Education Businesses','intro':'Websites, portals, dashboards and digital experiences for schools, training businesses and education-focused organizations.','body':['Education organizations may need public websites alongside private workflows such as registrations, portals, forms and dashboards.','Entrix II can scope these pieces separately or combine them into a coherent digital platform.']},
+    {'slug':'fashion','name':'Fashion & Lifestyle','title':'E-commerce & Websites for Fashion and Lifestyle Brands','intro':'Brand-led websites, online stores and digital experiences for fashion, beauty and lifestyle businesses.','body':['Fashion and lifestyle brands need strong presentation without sacrificing usability. Product discovery, mobile performance, checkout and clear brand storytelling all contribute to the customer experience.','We build responsive digital storefronts and supporting systems around the brand and its sales process.']},
+    {'slug':'nonprofits','name':'Nonprofits & Organizations','title':'Web Development for Nonprofits & Organizations','intro':'Accessible websites, information hubs, forms and custom digital systems for organizations in Nigeria and Africa.','body':['Organizations often need websites that make information easy to find while supporting forms, contact workflows, events, programs or donations where applicable.','We can structure the site around the audiences and tasks that matter most to the organization.']},
+    {'slug':'corporate','name':'Corporate Businesses','title':'Corporate Website Development in Nigeria','intro':'Professional corporate websites, service pages, case studies and digital systems for established businesses.','body':['Corporate websites need clear information architecture, strong credibility signals, fast performance and maintainable content.','Entrix II builds corporate sites with reusable page structures, technical SEO foundations and conversion paths for enquiries.']},
+    {'slug':'saas','name':'SaaS & Digital Products','title':'Web Application Development for SaaS & Digital Products','intro':'Interfaces, dashboards, authentication, APIs and web applications for SaaS companies and digital products.','body':['Digital products need a reliable interface and backend architecture that supports real users, not just a marketing page.','Entrix II can contribute to product UI, web application development, dashboards, APIs, authentication and integrations.']},
+]
+
+ARTICLES = [
+    {'slug':'how-much-does-a-website-cost-in-nigeria','title':'How Much Does a Website Cost in Nigeria?','description':'A practical guide to the factors that determine website development pricing in Nigeria, from simple business sites to custom web applications.','intro':'Website prices in Nigeria vary because “website” can mean anything from a few static pages to a database-backed application. The useful question is what the business needs the site to do.','sections':[('What affects the price?','Page count, custom design, content, forms, e-commerce, integrations, authentication, dashboards, hosting and ongoing maintenance all affect scope. A five-page company website is fundamentally different from a platform with customer accounts and payments.'),('What should a business budget for?','Instead of choosing a price from a generic package, list the pages, features, integrations and content requirements first. Then compare quotes based on what is actually included.'),('How to avoid a cheap rebuild later','A low upfront price can become expensive if the site is difficult to maintain, slow on mobile, impossible to edit or poorly structured for search. Ask what platform is being used, who owns the code and domain, and what happens after launch.')], 'keywords':['website cost Nigeria','how much website costs in Nigeria','website development price Nigeria']},
+    {'slug':'seo-for-small-businesses-in-nigeria','title':'SEO for Small Businesses in Nigeria: A Practical Guide','description':'A practical SEO checklist for Nigerian businesses that want more qualified visibility from Google.','intro':'Small businesses do not need to publish hundreds of pages to begin SEO. They need a technically accessible website, clear service pages, useful information and a consistent way to demonstrate relevance and trust.','sections':[('Start with the pages that matter','Create strong pages for your core services and the audiences you actually serve. Each page should answer the user’s intent instead of repeating the same paragraph with different keywords.'),('Make the site easy to crawl','Use descriptive titles, headings, internal links, canonical URLs, XML sitemaps, clean URLs and mobile-friendly layouts. Fix broken links and avoid blocking important resources from crawlers.'),('Build evidence of expertise','Case studies, original insights, useful guides, genuine business information and references from relevant sites can strengthen a business’s overall search presence over time.')], 'keywords':['SEO for small businesses Nigeria','small business SEO Nigeria','Google SEO Nigeria']},
+    {'slug':'website-seo-checklist-nigeria','title':'Website SEO Checklist for Nigerian Businesses','description':'A technical and on-page SEO checklist for businesses launching or improving a website in Nigeria.','intro':'Before chasing competitive keywords, make sure the site can be crawled, understood and trusted. This checklist covers the foundations that should be in place first.','sections':[('Technical foundations','Use HTTPS, fast pages, responsive design, a crawlable navigation structure, canonical URLs, an XML sitemap and a sensible robots.txt file.'),('Page-level optimization','Give each important page a unique title and description, one clear primary heading, useful copy, descriptive image alt text and contextual internal links.'),('Local relevance','If the business serves a defined Nigerian market, make the service area clear in useful content. Keep business details consistent across legitimate profiles and directories; do not create duplicate city pages with near-identical copy.')], 'keywords':['SEO checklist Nigeria','technical SEO checklist Nigeria','website SEO Nigeria']},
+    {'slug':'paystack-integration-guide-for-business-websites','title':'Paystack Integration for Business Websites: What to Plan','description':'Key technical and UX considerations when integrating online payments into a business website.','intro':'Payment integration is not just a button. A reliable checkout needs transaction verification, clear order states, error handling and a customer experience that works on mobile.','sections':[('Plan the payment flow','Decide what happens before payment, during checkout, after success and after failure. The application should have a clear internal order state rather than assuming every browser response means payment succeeded.'),('Verify transactions server-side','Payment providers expose mechanisms for verification and webhooks. Use the provider’s current documentation and credentials, and never expose secret keys in frontend code.'),('Design for real customers','Explain what the customer is buying, show the total clearly and provide a useful confirmation path. Mobile checkout should be tested carefully because many customers will use phones.')], 'keywords':['Paystack integration Nigeria','payment integration Nigeria','online payments Nigeria']},
+    {'slug':'how-to-choose-a-web-development-company-in-nigeria','title':'How to Choose a Web Development Company in Nigeria','description':'Questions to ask before hiring a Nigerian web developer or digital agency.','intro':'The best developer is not necessarily the one with the cheapest quote. Look for evidence that they can understand your requirements, build the product, communicate clearly and leave you with a maintainable system.','sections':[('Review real work','Ask for live examples and case studies. Look at the actual sites on mobile, test forms and check whether the work matches your needs.'),('Ask who owns the assets','Clarify domain ownership, hosting access, source code, design files and third-party accounts. Your business should not be locked out of its own digital property.'),('Ask about after-launch support','A site needs updates, fixes and sometimes new features. Know whether maintenance is included, optional or charged separately.')], 'keywords':['web development company Nigeria','best web developer Nigeria','hire web developer Nigeria']},
+]
+
+PROJECTS = [
+    {'id':'jecyani-properties','title':'Jecyani Properties','category':'Real Estate','url':'https://jecyaniproperties.com/','live':True,'description':'A modern real estate platform showcasing properties with a sleek, trust-driven interface. Built for speed and conversion.','image':'jacyani.jpg','technologies':['Flask','Tailwind CSS','JavaScript','PostgreSQL'],'challenge':'The client needed a digital presence that reflected their premium property portfolio while being easy to manage.','solution':'We built a custom CMS with property listings, advanced search, and a streamlined contact system.'},
+    {'id':'crownbee-global','title':'Crownbee Global Services','category':'Real Estate','url':'https://crownbeeglobalservices.com/','live':True,'description':'A corporate website for international real estate services, emphasizing trust and global reach.','image':'crownbee.jpg','technologies':['React','Node.js','MongoDB','AWS'],'challenge':'Showcasing a diverse portfolio across multiple countries with a unified brand voice.','solution':'A multi-language site with dynamic content blocks and a powerful backend.'},
+    {'id':'verrazzano','title':'Verrazzano','category':'Furniture','url':None,'live':False,'description':'A high-end furniture brand concept. This case study explores e-commerce and immersive product presentation.','image':'image.WebP','technologies':['Next.js','Three.js','Stripe','GraphQL'],'challenge':'Creating a digital showroom that feels as luxurious as the physical products.','solution':'A 3D product viewer with AR preview, integrated with a headless CMS for inventory.'},
+    {'id':'michie-plus','title':'Michie Plus','category':'E-commerce','url':'https://michieplus.com.ng/','live':True,'description':'A full-featured e-commerce platform for fashion and lifestyle. Currently a case study of scalable architecture.','image':'michieplus.jpg','technologies':['Vue.js','Django','PostgreSQL','Redis','Celery'],'challenge':'Handling high traffic during flash sales with a seamless checkout experience.','solution':'Microservices architecture with a message queue for order processing, and a responsive Vue storefront.'},
+    {'id':'becca-treats','title':'Becca Treats','category':'Food & Treats','url':None,'live':False,'description':'A delightful brand for homemade treats. This case study focuses on brand storytelling and online ordering.','image':'image.WebP','technologies':['WordPress','WooCommerce','Custom Theme','SEO'],'challenge':'Translating the warmth of a local bakery into a digital experience.','solution':'A custom WordPress theme with a focus on visuals and a simple ordering flow.'},
+]
+
+def send_contact_email(form):
+    if not MAIL_USERNAME or not MAIL_PASSWORD:
+        app.logger.warning('MAIL_USERNAME / MAIL_PASSWORD not set — contact email not sent.')
+        return False
+    name=form.get('name','').strip(); email=form.get('email','').strip(); company=form.get('company','').strip(); service=form.get('service','').strip(); description=form.get('description','').strip(); budget=form.get('budget','').strip()
+    service_title=next((s['title'] for s in SERVICES if s['id']==service),service)
+    msg=EmailMessage(); msg['Subject']=f'New project inquiry from {name or "website visitor"}'; msg['From']=MAIL_USERNAME; msg['To']=MAIL_RECIPIENT
+    if email: msg['Reply-To']=email
+    msg.set_content(f"New message from the Entrix II contact form\n\nName: {name}\nEmail: {email}\nCompany: {company or '—'}\nService: {service_title or '—'}\nBudget: {budget or '—'}\n\nProject description:\n{description}\n")
+    try:
+        with smtplib.SMTP(MAIL_SERVER,MAIL_PORT,timeout=10) as smtp:
+            smtp.starttls(); smtp.login(MAIL_USERNAME,MAIL_PASSWORD); smtp.send_message(msg)
+        return True
+    except Exception as exc:
+        app.logger.error(f'Failed to send contact email: {exc}'); return False
 
 @app.context_processor
 def inject_globals():
-    return {
-        'site': SITE,
-        'social': SOCIAL,
-        'projects': PROJECTS,
-        'services': SERVICES,
-        'now': datetime.now(),
-    }
+    return {'site':SITE,'social':SOCIAL,'projects':PROJECTS,'services':SERVICES,'regions':REGIONS,'industries':INDUSTRIES,'articles':ARTICLES,'now':datetime.now()}
 
 @app.route('/')
-def home():
-    return render_template('index.html')
-
+def home(): return render_template('index.html')
 @app.route('/about')
-def about():
-    return render_template('about.html')
-
+def about(): return render_template('about.html')
 @app.route('/services')
-def services():
-    return render_template('services.html')
-
+def services(): return render_template('services.html')
 @app.route('/work')
-def work():
-    return render_template('work.html', projects=PROJECTS)
-
+def work(): return render_template('work.html',projects=PROJECTS)
 @app.route('/work/<slug>')
 def project_detail(slug):
-    project = next((p for p in PROJECTS if p['id'] == slug), None)
-    if not project:
-        return "Project not found", 404
-    return render_template('project_detail.html', project=project)
+    project=next((p for p in PROJECTS if p['id']==slug),None)
+    if not project: abort(404)
+    return render_template('project_detail.html',project=project)
+@app.route('/services/<slug>')
+def service_detail(slug):
+    service=next((s for s in SERVICES if s['slug']==slug),None)
+    if not service: abort(404)
+    return render_template('service_detail.html',service=service)
+@app.route('/locations/<slug>')
+def region_detail(slug):
+    region=next((r for r in REGIONS if r['slug']==slug),None)
+    if not region: abort(404)
+    return render_template('region_detail.html',region=region)
+@app.route('/industries/<slug>')
+def industry_detail(slug):
+    industry=next((i for i in INDUSTRIES if i['slug']==slug),None)
+    if not industry: abort(404)
+    return render_template('industry_detail.html',industry=industry)
 
-@app.route('/contact', methods=['GET', 'POST'])
+@app.route('/insights')
+def insights(): return render_template('insights.html')
+@app.route('/insights/<slug>')
+def article_detail(slug):
+    article=next((a for a in ARTICLES if a['slug']==slug),None)
+    if not article: abort(404)
+    return render_template('article_detail.html',article=article)
+@app.route('/contact',methods=['GET','POST'])
 def contact():
-    if request.method == 'POST':
-        sent = send_contact_email(request.form)
-        if sent:
-            flash('Your message has been sent. We\'ll get back to you soon.', 'success')
-        else:
-            flash(
-                'Something went wrong sending your message. Please email us '
-                f'directly at {MAIL_RECIPIENT}.',
-                'error'
-            )
+    if request.method=='POST':
+        sent=send_contact_email(request.form)
+        flash('Your message has been sent. We\'ll get back to you soon.' if sent else f'Something went wrong. Please email {MAIL_RECIPIENT} directly.', 'success' if sent else 'error')
         return redirect(url_for('contact'))
     return render_template('contact.html')
 
-# Sitemap
 @app.route('/sitemap.xml')
 def sitemap():
-    pages = [
-        {'url': url_for('home'), 'priority': '1.0', 'changefreq': 'weekly'},
-        {'url': url_for('about'), 'priority': '0.8', 'changefreq': 'monthly'},
-        {'url': url_for('services'), 'priority': '0.8', 'changefreq': 'monthly'},
-        {'url': url_for('work'), 'priority': '0.9', 'changefreq': 'weekly'},
-    ]
-    for p in PROJECTS:
-        pages.append({
-            'url': url_for('project_detail', slug=p['id']),
-            'priority': '0.7',
-            'changefreq': 'monthly'
-        })
-    pages.append({'url': url_for('contact'), 'priority': '0.6', 'changefreq': 'yearly'})
-    return render_template('sitemap.xml', pages=pages), {'Content-Type': 'application/xml'}
+    now = datetime.utcnow().date().isoformat()
+    pages=[]
+    def add(endpoint, **kwargs):
+        pages.append({'url':url_for(endpoint,_external=True,**kwargs),'lastmod':now,'changefreq':'weekly','priority':'0.7'})
+    for endpoint in ['home','about','services','work','contact','insights']:
+        add(endpoint); pages[-1]['priority']='0.9' if endpoint in ('home','services') else '0.7'
+    for s in SERVICES: add('service_detail',slug=s['slug']); pages[-1]['priority']='0.9'
+    for r in REGIONS: add('region_detail',slug=r['slug']); pages[-1]['priority']='0.8'
+    for i in INDUSTRIES: add('industry_detail',slug=i['slug']); pages[-1]['priority']='0.8'
+    for a in ARTICLES: add('article_detail',slug=a['slug']); pages[-1]['priority']='0.8'
+    for p in PROJECTS: add('project_detail',slug=p['id']); pages[-1]['priority']='0.7'
+    return render_template('sitemap.xml',pages=pages), {'Content-Type':'application/xml'}
 
-# Robots.txt
 @app.route('/robots.txt')
 def robots():
-    return render_template('robots.txt'), {'Content-Type': 'text/plain'}
+    return render_template('robots.txt'), {'Content-Type':'text/plain'}
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__=='__main__': app.run(debug=True,host='0.0.0.0',port=5000)

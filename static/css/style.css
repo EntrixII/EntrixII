@@ -2515,3 +2515,11 @@ a{ color: inherit; text-decoration: none; }
   .service-detail-grid{ grid-template-columns: 1fr; }
   .engagement-grid{ grid-template-columns: 1fr; }
 }
+/* SEO landing page links */
+.service-detail-card h2 a,.project-card h2 a,.project-card h3 a{color:inherit;text-decoration:none}.about-seo-footer a,.project-detail a{color:inherit;text-underline-offset:3px}.keyword-cloud a{display:inline-block;margin:.25rem;text-decoration:none}
+
+/* SEO/navigation enhancements */
+.breadcrumbs{display:flex;gap:.65rem;align-items:center;padding-top:1rem;padding-bottom:0;font-size:.78rem;opacity:.72;flex-wrap:wrap}
+.breadcrumbs a{text-decoration:underline;text-underline-offset:3px}
+.footer-links{display:flex;gap:1rem;flex-wrap:wrap;margin:0 0 1rem}
+.footer-links a{font-size:.82rem}
