@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Agent Login — Entrix II{% endblock %}
+{% block description %}Entrix II lead agent login.{% endblock %}
+
+{% block content %}
+
+<section class="page-hero" style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:140px 24px 80px;">
+
+    <div class="section-shell" style="width:min(520px,100%);">
+
+        <p class="eyebrow">ENTRIX II / AGENT PORTAL</p>
+
+        <h1>Agent Login</h1>
+
+        <p class="lead">
+            Sign in to access the Lead Agent dashboard.
+        </p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form
+            method="POST"
+            action="{{ url_for('agent_login') }}"
+            autocomplete="off"
+            style="margin-top:28px;display:grid;gap:16px;"
+        >
+
+            <label>
+                Email
+
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="agent@example.com"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    readonly
+                    onfocus="this.removeAttribute('readonly');"
+                    required
+                >
+            </label>
+
+
+            <label>
+                Password
+
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="••••••••"
+                    autocomplete="new-password"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    readonly
+                    onfocus="this.removeAttribute('readonly');"
+                    required
+                >
+            </label>
+
+
+            <button type="submit" class="nav-cta">
+                Login
+            </button>
+
+        </form>
+
+
+        <p style="margin-top:18px;color:var(--ink-dim);font-size:14px;">
+            Authorized agents only. Your session is protected after login.
+        </p>
+
+
+        <p style="margin-top:18px;color:var(--ink-dim);font-size:14px;">
+            Don't have an account?
+            <a href="{{ url_for('agent_register') }}" style="color:var(--blue-glow);">
+                Create one
+            </a>
+        </p>
+
+    </div>
+
+</section>
+
+{% endblock %}

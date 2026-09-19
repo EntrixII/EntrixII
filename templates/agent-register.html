@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+
+{% block title %}Agent Registration — Entrix II{% endblock %}
+{% block description %}Register as an Entrix II lead agent.{% endblock %}
+
+{% block content %}
+
+<section class="page-hero" style="min-height:auto;padding:140px 24px 80px;">
+
+    <div class="section-shell" style="width:min(680px,100%);margin:0 auto;">
+
+        <p class="eyebrow">ENTRIX II / AGENT PORTAL</p>
+
+        <h1>Create Agent Account</h1>
+
+        <p class="lead">
+            Register to access the Agent Portal and start earning 30% commission
+            on every project that closes.
+        </p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form
+            method="POST"
+            action="{{ url_for('agent_register') }}"
+            autocomplete="off"
+            style="margin-top:32px;display:grid;gap:20px;"
+        >
+
+            <!-- ==============================================
+                 SECTION: PERSONAL
+            ============================================== -->
+            <div style="
+                border:1px solid var(--line);
+                border-radius:var(--radius);
+                padding:20px 22px;
+                background:var(--panel);
+            ">
+                <p style="
+                    font-family:'Space Mono',monospace;
+                    font-size:11px;
+                    letter-spacing:.2em;
+                    color:var(--blue-glow);
+                    margin:0 0 16px;
+                ">01 / PERSONAL DETAILS</p>
+
+                <div style="display:grid;gap:16px;">
+
+                    <label>
+                        Full Name *
+                        <input type="text" name="name" placeholder="Jane Doe"
+                               autocomplete="name" required>
+                    </label>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                        <label>
+                            Email *
+                            <input type="email" name="email" placeholder="jane@example.com"
+                                   autocomplete="email" required>
+                        </label>
+                        <label>
+                            Phone Number *
+                            <input type="tel" name="phone" placeholder="080 1234 5678"
+                                   autocomplete="tel" required>
+                        </label>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                        <label>
+                            NIN (11 digits) *
+                            <input type="text" name="nin" placeholder="12345678901"
+                                   inputmode="numeric" pattern="[0-9]{11}"
+                                   maxlength="11" required>
+                        </label>
+                        <label>
+                            Date of Birth *
+                            <input type="date" name="date_of_birth" required>
+                        </label>
+                    </div>
+
+                    <label>
+                        State / Region *
+                        <input type="text" name="state" placeholder="e.g. Lagos"
+                               required>
+                    </label>
+
+                    <label>
+                        Residential Address
+                        <input type="text" name="address"
+                               placeholder="Street, area, city">
+                    </label>
+
+                    <label>
+                        Current Occupation
+                        <input type="text" name="occupation"
+                               placeholder="e.g. Sales consultant, Student, Freelancer">
+                    </label>
+
+                </div>
+            </div>
+
+
+            <!-- ==============================================
+                 SECTION: MOTIVATION
+            ============================================== -->
+            <div style="
+                border:1px solid var(--line);
+                border-radius:var(--radius);
+                padding:20px 22px;
+                background:var(--panel);
+            ">
+                <p style="
+                    font-family:'Space Mono',monospace;
+                    font-size:11px;
+                    letter-spacing:.2em;
+                    color:var(--blue-glow);
+                    margin:0 0 16px;
+                ">02 / ABOUT YOU</p>
+
+                <div style="display:grid;gap:16px;">
+
+                    <label>
+                        How did you hear about Entrix II?
+                        <input type="text" name="heard_from"
+                               placeholder="e.g. Twitter, friend, Google">
+                    </label>
+
+                    <label>
+                        Why do you want to become an agent?
+                        <textarea name="motivation" rows="3"
+                                  placeholder="Tell us briefly about your network and why this interests you."
+                                  style="width:100%;background:var(--void);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;font-family:'Inter',sans-serif;font-size:15px;color:var(--ink);resize:vertical;"></textarea>
+                    </label>
+
+                </div>
+            </div>
+
+
+            <!-- ==============================================
+                 SECTION: PAYOUT DETAILS
+            ============================================== -->
+            <div style="
+                border:1px solid var(--line);
+                border-radius:var(--radius);
+                padding:20px 22px;
+                background:var(--panel);
+            ">
+                <p style="
+                    font-family:'Space Mono',monospace;
+                    font-size:11px;
+                    letter-spacing:.2em;
+                    color:var(--blue-glow);
+                    margin:0 0 6px;
+                ">03 / COMMISSION PAYOUT DETAILS</p>
+
+                <p style="
+                    margin:0 0 16px;
+                    font-size:13px;
+                    color:var(--ink-faint);
+                ">
+                    Required for paying your 30% commission when deals close.
+                </p>
+
+                <div style="display:grid;gap:16px;">
+
+                    <label>
+                        Bank Name *
+                        <input type="text" name="bank_name"
+                               placeholder="e.g. GTBank, Access, Opay"
+                               required>
+                    </label>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                        <label>
+                            Account Number * (10 digits)
+                            <input type="text" name="account_number"
+                                   placeholder="0123456789"
+                                   inputmode="numeric" pattern="[0-9]{10}"
+                                   maxlength="10" required>
+                        </label>
+                        <label>
+                            Account Name *
+                            <input type="text" name="account_name"
+                                   placeholder="Name on the account"
+                                   required>
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ==============================================
+                 SECTION: PASSWORD
+            ============================================== -->
+            <div style="
+                border:1px solid var(--line);
+                border-radius:var(--radius);
+                padding:20px 22px;
+                background:var(--panel);
+            ">
+                <p style="
+                    font-family:'Space Mono',monospace;
+                    font-size:11px;
+                    letter-spacing:.2em;
+                    color:var(--blue-glow);
+                    margin:0 0 16px;
+                ">04 / SECURE YOUR ACCOUNT</p>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+                    <label>
+                        Password *
+                        <input type="password" name="password"
+                               placeholder="Min 8 characters"
+                               autocomplete="new-password"
+                               minlength="8" required>
+                    </label>
+
+                    <label>
+                        Confirm Password *
+                        <input type="password" name="confirm_password"
+                               placeholder="Repeat password"
+                               autocomplete="new-password"
+                               minlength="8" required>
+                    </label>
+
+                </div>
+            </div>
+
+
+            <button type="submit" class="btn btn-primary" style="justify-self:flex-start;">
+                Submit Application →
+            </button>
+
+        </form>
+
+
+        <p style="margin-top:20px;color:var(--ink-dim);font-size:13px;line-height:1.6;">
+            After submitting, your application goes into review. You'll receive
+            an email at the address you provided <strong>once an admin approves it</strong>.
+        </p>
+
+        <p style="margin-top:16px;color:var(--ink-dim);font-size:14px;">
+            Already have an account?
+            <a href="{{ url_for('agent_login') }}" style="color:var(--blue-glow);">
+                Sign in
+            </a>
+        </p>
+
+    </div>
+
+</section>
+
+<style>
+    .section-shell label{
+        display:block;
+        font-family:'Space Mono', monospace;
+        font-size:12px;
+        letter-spacing:.04em;
+        color:var(--ink-dim);
+    }
+    .section-shell input,
+    .section-shell textarea{
+        width:100%;
+        margin-top:6px;
+        background:var(--void);
+        border:1px solid var(--line);
+        border-radius:var(--radius);
+        padding:11px 14px;
+        font-family:'Inter', sans-serif;
+        font-size:15px;
+        color:var(--ink);
+        transition:border-color .25s, box-shadow .25s;
+    }
+    .section-shell input:focus,
+    .section-shell textarea:focus{
+        outline:none;
+        border-color:var(--blue-glow);
+        box-shadow:0 0 0 2px rgba(58,122,255,0.2);
+    }
+    @media (max-width:560px){
+        .section-shell div[style*="grid-template-columns:1fr 1fr"]{
+            grid-template-columns:1fr !important;
+        }
+    }
+</style>
+
+{% endblock %}

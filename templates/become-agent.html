@@ -1,0 +1,444 @@
+{% extends 'base.html' %}
+
+{% block title %}Become an Agent — Entrix II{% endblock %}
+
+{% block description %}
+Join the Entrix II agent network. Earn 30% commission for connecting
+businesses with professional websites, software and digital solutions.
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How is the 30% commission calculated?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "30% of the final project amount the client pays. If a project closes at N500,000, your commission is N150,000. No caps, no sliding scale."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When do I get paid?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Commission is paid once the client's payment has cleared and the project has started. Specific payout timing and method are agreed with each agent in writing before referral."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need technical skills?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. You only need to introduce businesses that need digital services. Entrix II handles scoping, proposals, development and delivery."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long does approval take?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most accounts are reviewed within 24 to 72 hours. You'll receive an email notification once your account is approved."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there any cost to join?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Registration and lead submission are completely free. You only earn, you never pay."
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- =========================================================
+     HERO
+========================================================= -->
+<section class="page-hero" style="min-height:auto;display:flex;align-items:center;padding:140px 24px 60px;">
+
+    <div class="section-shell" style="width:min(900px,100%);margin:0 auto;">
+
+        <p class="eyebrow">ENTRIX II / AGENT PROGRAM</p>
+
+        <h1>Become an Agent</h1>
+
+        <p class="lead" style="max-width:720px;">
+            Connect businesses with professional websites, software, e-commerce
+            and digital solutions — and earn <strong>30% commission</strong> on
+            every project that closes.
+        </p>
+
+        <p style="
+            margin-top:16px;
+            font-family:'Space Mono', monospace;
+            font-size:12px;
+            letter-spacing:.08em;
+            color:var(--blue-glow);
+        ">
+            NEW AGENT ACCOUNTS ARE REVIEWED BEFORE ACTIVATION. YOU'LL GET AN EMAIL ONCE APPROVED.
+        </p>
+
+        <div style="margin-top:36px;display:flex;gap:14px;flex-wrap:wrap;">
+            <a href="{{ url_for('agent_register') }}" class="btn btn-primary">
+                Create Agent Account
+            </a>
+            <a href="#how-it-works" class="btn btn-ghost">
+                How it works
+            </a>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     COMMISSION HIGHLIGHT
+========================================================= -->
+<section class="section-about">
+
+    <div class="container">
+
+        <div class="about-grid">
+
+            <div class="about-label">
+                <span>30%</span>
+                <span>COMMISSION</span>
+            </div>
+
+            <div class="about-content">
+
+                <h2 class="section-title">
+                    Earn 30% commission on every closed deal.
+                    <span>No caps. No delays.</span>
+                </h2>
+
+                <p>
+                    Every time a business you referred signs and pays for an
+                    Entrix II project, you earn 30% of the project value.
+                </p>
+
+                <p>
+                    Whether you refer a company that needs a website, an online
+                    store, a custom dashboard, SEO work or a full business
+                    platform — your commission is calculated on the final
+                    project amount and paid once the client's payment clears.
+                </p>
+
+                <p style="color:var(--ink-faint);font-size:14px;">
+                    Commission applies to completed, paid projects. Payment
+                    terms are agreed with each agent in writing before any
+                    referral is submitted.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     HOW IT WORKS
+========================================================= -->
+<section id="how-it-works" class="section-process">
+
+    <div class="container">
+
+        <p class="section-kicker">HOW IT WORKS</p>
+        <h2 class="section-title">Four steps from referral to payout.</h2>
+
+        <div class="process-grid">
+
+            <div class="process-item">
+                <span>01</span>
+                <h3>Register</h3>
+                <p>
+                    Create your agent account. An admin reviews and approves
+                    it — you'll get an email once you're in.
+                </p>
+            </div>
+
+            <div class="process-item">
+                <span>02</span>
+                <h3>Submit Leads</h3>
+                <p>
+                    Log into your dashboard and add businesses that need
+                    a website, software or digital service.
+                </p>
+            </div>
+
+            <div class="process-item">
+                <span>03</span>
+                <h3>We Close</h3>
+                <p>
+                    Entrix II handles the pitch, scope, proposal and delivery.
+                    You get notified as the deal moves.
+                </p>
+            </div>
+
+            <div class="process-item">
+                <span>04</span>
+                <h3>Get Paid</h3>
+                <p>
+                    Once the client pays, you receive 30% commission on the
+                    project value. No hidden deductions.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     WHY BECOME AN AGENT
+========================================================= -->
+<section class="section-why">
+
+    <div class="container">
+
+        <p class="section-kicker">WHY JOIN</p>
+        <h2 class="section-title">Built for people who connect businesses with solutions.</h2>
+
+        <div class="why-grid">
+
+            <div class="why-item">
+                <span class="why-icon">💸</span>
+                <h3>30% Commission</h3>
+                <p>
+                    One of the highest agent rates in the Nigerian digital
+                    services market. Paid on real, closed projects.
+                </p>
+            </div>
+
+            <div class="why-item">
+                <span class="why-icon">📊</span>
+                <h3>Track Everything</h3>
+                <p>
+                    See every lead you've submitted and its current status
+                    from your personal agent dashboard.
+                </p>
+            </div>
+
+            <div class="why-item">
+                <span class="why-icon">🎯</span>
+                <h3>We Handle Delivery</h3>
+                <p>
+                    You focus on connecting. Entrix II handles the technical
+                    work, the client relationship and the delivery.
+                </p>
+            </div>
+
+            <div class="why-item">
+                <span class="why-icon">🚀</span>
+                <h3>No Cost to Join</h3>
+                <p>
+                    Registering and submitting leads is completely free.
+                    You only earn — you never pay.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     WHO THIS IS FOR
+========================================================= -->
+<section class="section-clients">
+
+    <div class="container">
+
+        <p class="section-kicker">WHO THIS IS FOR</p>
+        <h2 class="section-title">If you know businesses, you qualify.</h2>
+
+        <div class="client-types">
+            <span>Freelancers</span>
+            <span>Sales Professionals</span>
+            <span>Consultants</span>
+            <span>Agency Partners</span>
+            <span>Business Advisors</span>
+            <span>Marketing People</span>
+            <span>Students &amp; Creators</span>
+            <span>Anyone With a Network</span>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     WHAT YOU CAN REFER
+========================================================= -->
+<section class="section-capabilities">
+
+    <div class="container">
+
+        <p class="section-kicker">WHAT YOU CAN REFER</p>
+        <h2 class="section-title">Services your leads can buy.</h2>
+
+        <div class="capability-grid">
+
+            <div class="capability-card">
+                <span class="capability-number">01</span>
+                <h3>Websites</h3>
+                <p>Business websites, corporate sites, landing pages and redesigns.</p>
+            </div>
+
+            <div class="capability-card">
+                <span class="capability-number">02</span>
+                <h3>E-Commerce</h3>
+                <p>Online stores, payment integration, checkout and order systems.</p>
+            </div>
+
+            <div class="capability-card">
+                <span class="capability-number">03</span>
+                <h3>Web Applications</h3>
+                <p>Dashboards, portals, booking systems and custom web platforms.</p>
+            </div>
+
+            <div class="capability-card">
+                <span class="capability-number">04</span>
+                <h3>Custom Software</h3>
+                <p>Business tools, internal systems and database-driven platforms.</p>
+            </div>
+
+            <div class="capability-card">
+                <span class="capability-number">05</span>
+                <h3>SEO &amp; Growth</h3>
+                <p>Technical SEO, content optimization and search visibility work.</p>
+            </div>
+
+            <div class="capability-card">
+                <span class="capability-number">06</span>
+                <h3>Integrations</h3>
+                <p>Payment gateways, APIs, automation and third-party services.</p>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     FAQ
+========================================================= -->
+<section class="section-faq">
+
+    <div class="container">
+
+        <p class="section-kicker">FAQ</p>
+        <h2 class="section-title">Common questions from new agents.</h2>
+
+        <div class="faq-list">
+
+            <div class="faq-item">
+                <h2>How is the 30% commission calculated?</h2>
+                <p>
+                    30% of the final project amount the client pays. If a
+                    project closes at ₦500,000, your commission is ₦150,000.
+                    No caps, no sliding scale.
+                </p>
+            </div>
+
+            <div class="faq-item">
+                <h2>When do I get paid?</h2>
+                <p>
+                    Commission is paid once the client's payment has cleared
+                    and the project has started. Specific payout timing and
+                    method are agreed with each agent in writing before
+                    referral.
+                </p>
+            </div>
+
+            <div class="faq-item">
+                <h2>Do I need technical skills?</h2>
+                <p>
+                    No. You only need to introduce businesses that need digital
+                    services. Entrix II handles scoping, proposals, development
+                    and delivery.
+                </p>
+            </div>
+
+            <div class="faq-item">
+                <h2>How long does approval take?</h2>
+                <p>
+                    Most accounts are reviewed within 24–72 hours. You'll
+                    receive an email notification once your account is approved.
+                </p>
+            </div>
+
+            <div class="faq-item">
+                <h2>Can I submit leads I don't personally know?</h2>
+                <p>
+                    Yes — as long as the lead is genuine, you're the one who
+                    made the introduction, and the business hasn't already
+                    been in contact with Entrix II. Duplicate or pre-existing
+                    leads cannot be claimed.
+                </p>
+            </div>
+
+            <div class="faq-item">
+                <h2>Is there any cost to join?</h2>
+                <p>
+                    No. Registration and lead submission are completely free.
+                    You only earn — you never pay.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     FINAL CTA
+========================================================= -->
+<section class="about-final">
+
+    <div class="container">
+
+        <span>ENTRIX II / AGENT PROGRAM</span>
+
+        <h2>
+            Know a business that needs
+            <br>
+            <strong>a better digital presence?</strong>
+        </h2>
+
+        <p>
+            Turn your network into income. 30% commission on every closed deal.
+        </p>
+
+        <a href="{{ url_for('agent_register') }}" class="btn btn-primary">
+            Create Agent Account →
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}

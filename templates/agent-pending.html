@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Account Under Review — Entrix II{% endblock %}
+{% block description %}Your Entrix II agent account is under review.{% endblock %}
+
+{% block content %}
+
+<section class="page-hero" style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:140px 24px 80px;">
+
+    <div class="section-shell" style="width:min(560px,100%);text-align:center;">
+
+        <p class="eyebrow">ENTRIX II / AGENT PORTAL</p>
+
+        <h1>Account Under Review</h1>
+
+        <p class="lead" style="margin:0 auto 32px;">
+            Thanks for registering. Your agent account is now being reviewed
+            by an administrator. You'll be able to log in and submit leads
+            once your account is approved.
+        </p>
+
+
+        <div style="
+            background:var(--panel);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            padding:22px 26px;
+            text-align:left;
+            font-family:'Space Mono', monospace;
+            font-size:13px;
+            color:var(--ink-dim);
+            margin-bottom:32px;
+        ">
+            <p style="margin:0 0 12px;color:var(--blue-glow);letter-spacing:.15em;">
+                WHAT HAPPENS NEXT
+            </p>
+            <p style="margin:0 0 8px;">1. An admin reviews your account.</p>
+            <p style="margin:0 0 8px;">2. If approved, an email is sent to the address you registered with.</p>
+            <p style="margin:0 0 8px;">3. You can then log in and start submitting leads.</p>
+            <p style="margin:0;color:var(--ink-faint);">
+                Didn't get an email after a few days? Check your spam folder,
+                or contact support.
+            </p>
+        </div>
+
+
+        <a href="{{ url_for('agent_login') }}" class="btn btn-primary">
+            Back to Login
+        </a>
+
+
+        <p style="margin-top:24px;color:var(--ink-faint);font-size:13px;">
+            Already approved? Try
+            <a href="{{ url_for('agent_login') }}" style="color:var(--blue-glow);">
+                logging in
+            </a>.
+        </p>
+
+    </div>
+
+</section>
+
+{% endblock %}

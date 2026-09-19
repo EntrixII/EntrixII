@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Setup — Entrix II{% endblock %}
+{% block description %}One-time admin setup.{% endblock %}
+
+{% block content %}
+
+<section class="page-hero" style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:140px 24px 80px;">
+
+    <div class="section-shell" style="width:min(520px,100%);">
+
+        <p class="eyebrow">ENTRIX II / ADMIN SETUP</p>
+
+        <h1>Create Admin Account</h1>
+
+        <p class="lead">
+            This page is available only once. After the first admin is created,
+            it will be permanently disabled.
+        </p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form
+            method="POST"
+            action="{{ url_for('admin_register') }}"
+            autocomplete="off"
+            style="margin-top:28px;display:grid;gap:16px;"
+        >
+
+            <label>
+                Full Name
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="Site Admin"
+                    autocomplete="off"
+                    required
+                >
+            </label>
+
+            <label>
+                Email
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="admin@entrix.local"
+                    autocomplete="off"
+                    required
+                >
+            </label>
+
+            <label>
+                Password
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="••••••••"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                >
+            </label>
+
+            <label>
+                Confirm Password
+                <input
+                    type="password"
+                    name="confirm_password"
+                    placeholder="••••••••"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                >
+            </label>
+
+            <button type="submit" class="nav-cta">
+                Create Admin Account
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+{% endblock %}

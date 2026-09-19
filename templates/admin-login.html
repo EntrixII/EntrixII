@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Login — Entrix II{% endblock %}
+{% block description %}Entrix II admin login.{% endblock %}
+
+{% block content %}
+
+<section class="page-hero" style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:140px 24px 80px;">
+
+    <div class="section-shell" style="width:min(520px,100%;)">
+
+        <p class="eyebrow">ENTRIX II / ADMIN</p>
+
+        <h1>Admin Login</h1>
+
+        <p class="lead">
+            Restricted access. Administrators only.
+        </p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form
+            method="POST"
+            action="{{ url_for('admin_login') }}"
+            autocomplete="off"
+            style="margin-top:28px;display:grid;gap:16px;"
+        >
+
+            <label>
+                Email
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="admin@entrix.local"
+                    autocomplete="off"
+                    readonly
+                    onfocus="this.removeAttribute('readonly');"
+                    required
+                >
+            </label>
+
+            <label>
+                Password
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="••••••••"
+                    autocomplete="new-password"
+                    readonly
+                    onfocus="this.removeAttribute('readonly');"
+                    required
+                >
+            </label>
+
+            <button type="submit" class="nav-cta">
+                Login
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}Lead Dashboard — Entrix II{% endblock %}
+{% block description %}Entrix II Lead Agent dashboard.{% endblock %}
+
+{% block content %}
+
+<section class="agent-dashboard">
+
+    <div class="dashboard-shell">
+
+        <div class="dashboard-top">
+            <div>
+                <p class="eyebrow">ENTRIX II / LEAD AGENT</p>
+                <h1>Welcome, {{ agent_name }}</h1>
+                <p class="lead">Submit and track your leads from one place.</p>
+            </div>
+            <a href="{{ url_for('agent_logout') }}" class="btn btn-ghost">Logout</a>
+        </div>
+
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+
+        <!-- ============ STATS ============ -->
+        <div class="dashboard-stats" style="grid-template-columns:repeat(4,1fr);">
+
+            <div class="dashboard-card">
+                <span class="dashboard-label">TOTAL LEADS</span>
+                <strong>{{ stats.total }}</strong>
+            </div>
+
+            <div class="dashboard-card">
+                <span class="dashboard-label">IN PROGRESS</span>
+                <strong style="color:var(--blue-glow);">{{ stats.in_progress }}</strong>
+            </div>
+
+            <div class="dashboard-card">
+                <span class="dashboard-label">BUILDING</span>
+                <strong style="color:#fb923c;">{{ stats.building }}</strong>
+            </div>
+
+            <div class="dashboard-card">
+                <span class="dashboard-label">AWAITING PAYMENT</span>
+                <strong style="color:#22d3ee;">{{ stats.awaiting_payment }}</strong>
+            </div>
+
+            <div class="dashboard-card">
+                <span class="dashboard-label">PAID / SUCCESSFUL</span>
+                <strong style="color:#4ade80;">{{ stats.paid }}</strong>
+            </div>
+
+            <div class="dashboard-card">
+                <span class="dashboard-label">PENDING REVIEW</span>
+                <strong style="color:var(--ink-faint);">{{ stats.pending }}</strong>
+            </div>
+
+            <div class="dashboard-card">
+                <span class="dashboard-label">REJECTED</span>
+                <strong>{{ stats.rejected }}</strong>
+            </div>
+
+            <div class="dashboard-card">
+                <span class="dashboard-label">LOST</span>
+                <strong style="color:#ff6b6b;">{{ stats.lost }}</strong>
+            </div>
+
+        </div>
+
+
+        <!-- ============ SUBMIT NEW LEAD ============ -->
+        <div class="dashboard-section" style="margin-bottom:32px;">
+
+            <div class="dashboard-section-header">
+                <div>
+                    <p class="eyebrow">NEW LEAD</p>
+                    <h2>Submit a Lead</h2>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('agent_add_lead') }}"
+                  style="display:grid;gap:14px;">
+
+                <label>
+                    Business / Lead Name *
+                    <input type="text" name="name" required
+                           style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;color:var(--ink);font-family:'Inter',sans-serif;">
+                </label>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <label>
+                        Email
+                        <input type="email" name="email"
+                               style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;color:var(--ink);font-family:'Inter',sans-serif;">
+                    </label>
+                    <label>
+                        Phone
+                        <input type="text" name="phone"
+                               style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;color:var(--ink);font-family:'Inter',sans-serif;">
+                    </label>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <label>
+                        Company
+                        <input type="text" name="company"
+                               style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;color:var(--ink);font-family:'Inter',sans-serif;">
+                    </label>
+                    <label>
+                        Service Interested In
+                        <input type="text" name="service"
+                               placeholder="e.g. Web Development"
+                               style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;color:var(--ink);font-family:'Inter',sans-serif;">
+                    </label>
+                </div>
+
+                <label>
+                    Notes
+                    <textarea name="notes" rows="3"
+                              style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;color:var(--ink);font-family:'Inter',sans-serif;resize:vertical;"></textarea>
+                </label>
+
+                <button type="submit" class="btn btn-primary" style="justify-self:flex-start;">
+                    Submit Lead
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- ============ LEAD TRACKER ============ -->
+        <div class="dashboard-section">
+
+            <div class="dashboard-section-header">
+                <div>
+                    <p class="eyebrow">LEAD TRACKER</p>
+                    <h2>Your Leads</h2>
+                </div>
+            </div>
+
+            {% if leads %}
+            <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                    <thead>
+                        <tr style="text-align:left;border-bottom:1px solid var(--line);">
+                            <th style="padding:12px 8px;">Lead</th>
+                            <th style="padding:12px 8px;">Contact</th>
+                            <th style="padding:12px 8px;">Service</th>
+                            <th style="padding:12px 8px;">Status</th>
+                            <th style="padding:12px 8px;">Update</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lead in leads %}
+                        <tr style="border-bottom:1px solid var(--line);">
+                            <td style="padding:12px 8px;">
+                                <strong>{{ lead.name }}</strong>
+                                {% if lead.company %}
+                                    <br><small style="color:var(--ink-faint);">{{ lead.company }}</small>
+                                {% endif %}
+                            </td>
+                            <td style="padding:12px 8px;color:var(--ink-dim);">
+                                {{ lead.email or '' }}{% if lead.email and lead.phone %} · {% endif %}{{ lead.phone or '' }}
+                            </td>
+                            <td style="padding:12px 8px;">{{ lead.service or '—' }}</td>
+                            <td style="padding:12px 8px;">
+                                {% if lead.status == 'pending' %}
+                                    <span style="color:var(--ink-faint);">Pending review</span>
+                                {% elif lead.status == 'rejected' %}
+                                    <span style="color:#ff6b6b;">Rejected</span>
+                                {% elif lead.status == 'approved' %}
+                                    <span style="color:var(--blue-glow);">Approved</span>
+                                {% elif lead.status == 'contacted' %}
+                                    <span style="color:#fbbf24;">Contacted</span>
+                                {% elif lead.status == 'talking' %}
+                                    <span style="color:#fbbf24;">Talking</span>
+                                {% elif lead.status == 'negotiating' %}
+                                    <span style="color:#fb923c;">Negotiating</span>
+                                {% elif lead.status == 'project_confirmed' %}
+                                    <span style="color:#fb923c;font-weight:600;">Project Confirmed</span>
+                                {% elif lead.status == 'building' %}
+                                    <span style="color:#fb923c;font-weight:600;">Building</span>
+                                {% elif lead.status == 'payment_received' %}
+                                    <span style="color:#22d3ee;font-weight:600;">Payment Received</span>
+                                {% elif lead.status == 'commission_received' %}
+                                    <span style="color:#4ade80;font-weight:600;">Commission Received</span>
+                                {% elif lead.status == 'successful' %}
+                                    <span style="color:#4ade80;font-weight:700;">Successful</span>
+                                {% elif lead.status == 'lost' %}
+                                    <span style="color:#ff6b6b;">Lost</span>
+                                {% else %}
+                                    <span style="color:var(--ink-dim);">{{ lead.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding:12px 8px;">
+                                {% if lead.status in ('pending', 'rejected') %}
+                                    <small style="color:var(--ink-faint);font-family:'Space Mono',monospace;">
+                                        {% if lead.status == 'pending' %}Awaiting admin{% else %}Blocked{% endif %}
+                                    </small>
+                                {% else %}
+                                    <form method="POST"
+                                          action="{{ url_for('agent_update_lead_status', lead_id=lead.id) }}"
+                                          style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+
+                                        <select name="status"
+                                                style="background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:6px 10px;color:var(--ink);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase;max-width:180px;">
+                                            <option value="approved"            {% if lead.status == 'approved' %}selected{% endif %}>Approved</option>
+                                            <option value="contacted"           {% if lead.status == 'contacted' %}selected{% endif %}>Contacted</option>
+                                            <option value="talking"             {% if lead.status == 'talking' %}selected{% endif %}>Talking</option>
+                                            <option value="negotiating"         {% if lead.status == 'negotiating' %}selected{% endif %}>Negotiating</option>
+                                            <option value="project_confirmed"   {% if lead.status == 'project_confirmed' %}selected{% endif %}>Project Confirmed</option>
+                                            <option value="building"            {% if lead.status == 'building' %}selected{% endif %}>Building</option>
+                                            <option value="payment_received"    {% if lead.status == 'payment_received' %}selected{% endif %}>Payment Received</option>
+                                            <option value="commission_received" {% if lead.status == 'commission_received' %}selected{% endif %}>Commission Received</option>
+                                            <option value="successful"          {% if lead.status == 'successful' %}selected{% endif %}>Successful</option>
+                                            <option value="lost"                {% if lead.status == 'lost' %}selected{% endif %}>Lost</option>
+                                        </select>
+
+                                        <button type="submit" class="btn-sm primary">
+                                            Update
+                                        </button>
+
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if lead.notes %}
+                        <tr style="border-bottom:1px solid var(--line);background:var(--void-2);">
+                            <td colspan="5" style="padding:8px 12px 14px;font-family:'Space Mono',monospace;font-size:12px;color:var(--ink-dim);">
+                                <strong style="color:var(--blue-glow);">NOTES:</strong> {{ lead.notes }}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">+</div>
+                <h3>No leads yet</h3>
+                <p>Submit your first lead using the form above.</p>
+            </div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="dashboard-account">
+            <p class="eyebrow">ACCOUNT</p>
+            <p>Signed in as <strong>{{ agent_email }}</strong></p>
+        </div>
+
+    </div>
+
+</section>
+
+<style>
+    @media (max-width: 900px){
+        .dashboard-stats{ grid-template-columns: repeat(2, 1fr) !important; }
+    }
+    @media (max-width: 520px){
+        .dashboard-stats{ grid-template-columns: 1fr !important; }
+    }
+</style>
+
+{% endblock %}

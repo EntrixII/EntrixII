@@ -1,4 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory, abort
+from flask import (
+    Flask, render_template, request, redirect, url_for,
+    flash, send_from_directory, abort, session
+)
+import sqlite3
+from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import smtplib
 from email.message import EmailMessage
@@ -7,12 +13,177 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# ============================================================
+# AGENT DATABASE
+# ============================================================
+
+DATABASE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "entrix.db"
+)
+
+
+def get_db():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db():
+    conn = get_db()
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS agents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            phone TEXT,
+            nin TEXT,
+            date_of_birth TEXT,
+            state TEXT,
+            address TEXT,
+            occupation TEXT,
+            motivation TEXT,
+            heard_from TEXT,
+            bank_name TEXT,
+            account_number TEXT,
+            account_name TEXT,
+            password_hash TEXT NOT NULL,
+            is_approved INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS leads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            agent_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            email TEXT,
+            phone TEXT,
+            company TEXT,
+            service TEXT,
+            notes TEXT,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (agent_id) REFERENCES agents(id)
+        )
+    """)
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS admins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # Migration: add new columns to old agents tables
+    new_columns = [
+        ("phone", "TEXT"),
+        ("nin", "TEXT"),
+        ("date_of_birth", "TEXT"),
+        ("state", "TEXT"),
+        ("address", "TEXT"),
+        ("occupation", "TEXT"),
+        ("motivation", "TEXT"),
+        ("heard_from", "TEXT"),
+        ("bank_name", "TEXT"),
+        ("account_number", "TEXT"),
+        ("account_name", "TEXT"),
+        ("is_approved", "INTEGER NOT NULL DEFAULT 0"),
+    ]
+
+    existing_cols = {
+        row[1] for row in conn.execute("PRAGMA table_info(agents)").fetchall()
+    }
+
+    for col_name, col_type in new_columns:
+        if col_name not in existing_cols:
+            try:
+                conn.execute(f"ALTER TABLE agents ADD COLUMN {col_name} {col_type}")
+            except sqlite3.OperationalError:
+                pass
+
+    conn.commit()
+    conn.close()
+
+
+def create_default_agent():
+    email = os.environ.get("AGENT_EMAIL")
+    password = os.environ.get("AGENT_PASSWORD")
+    name = os.environ.get("AGENT_NAME", "Lead Agent")
+
+    if not email or not password:
+        return
+
+    conn = get_db()
+    existing = conn.execute(
+        "SELECT id FROM agents WHERE email = ?", (email,)
+    ).fetchone()
+
+    if not existing:
+        conn.execute(
+            "INSERT INTO agents (name, email, password_hash, is_approved) VALUES (?, ?, ?, 1)",
+            (name, email, generate_password_hash(password)),
+        )
+        conn.commit()
+
+    conn.close()
+
+
+def create_default_admin():
+    name = os.environ.get("ADMIN_NAME", "Site Admin")
+    email = os.environ.get("ADMIN_EMAIL")
+    password = os.environ.get("ADMIN_PASSWORD")
+
+    if not email or not password:
+        return
+
+    conn = get_db()
+    existing = conn.execute("SELECT id FROM admins LIMIT 1").fetchone()
+
+    if not existing:
+        conn.execute(
+            "INSERT INTO admins (name, email, password_hash) VALUES (?, ?, ?)",
+            (name, email, generate_password_hash(password)),
+        )
+        conn.commit()
+
+    conn.close()
+
+
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key-change-this")
+init_db()
+create_default_agent()
+create_default_admin()
+
+
+# ============================================================
+# LEAD STATUSES
+# ============================================================
+
+ALLOWED_AGENT_STATUSES = {
+    "approved",
+    "contacted",
+    "talking",
+    "negotiating",
+    "project_confirmed",
+    "building",
+    "payment_received",
+    "commission_received",
+    "successful",
+    "lost",
+}
+
 
 @app.route('/google1236e1335ed123fa.html')
 def google_verification():
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'google1236e1335ed123fa.html')
+
 
 MAIL_SERVER = 'smtp.gmail.com'
 MAIL_PORT = 587
@@ -89,6 +260,7 @@ PROJECTS = [
     {'id':'becca-treats','title':'Becca Treats','category':'Food & Treats','url':None,'live':False,'description':'A delightful brand for homemade treats. This case study focuses on brand storytelling and online ordering.','image':'image.WebP','technologies':['WordPress','WooCommerce','Custom Theme','SEO'],'challenge':'Translating the warmth of a local bakery into a digital experience.','solution':'A custom WordPress theme with a focus on visuals and a simple ordering flow.'},
 ]
 
+
 def send_contact_email(form):
     if not MAIL_USERNAME or not MAIL_PASSWORD:
         app.logger.warning('MAIL_USERNAME / MAIL_PASSWORD not set — contact email not sent.')
@@ -105,35 +277,125 @@ def send_contact_email(form):
     except Exception as exc:
         app.logger.error(f'Failed to send contact email: {exc}'); return False
 
+
+def send_agent_approved_email(agent_name, agent_email):
+    if not MAIL_USERNAME or not MAIL_PASSWORD:
+        app.logger.warning(
+            'MAIL_USERNAME / MAIL_PASSWORD not set — approval email not sent.'
+        )
+        return False
+
+    login_url = url_for('agent_login', _external=True)
+
+    subject = "Your Entrix II agent account has been approved"
+
+    body = f"""Hi {agent_name},
+
+Good news — your Entrix II agent account has been approved.
+
+You can now log in to the Agent Portal and start submitting leads:
+
+{login_url}
+
+Your login email: {agent_email}
+
+If you have any questions, just reply to this email.
+
+— Entrix II
+https://entrixii.com.ng
+"""
+
+    msg = EmailMessage()
+    msg['Subject'] = subject
+    msg['From'] = MAIL_USERNAME
+    msg['To'] = agent_email
+    msg.set_content(body)
+
+    try:
+        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=10) as smtp:
+            smtp.starttls()
+            smtp.login(MAIL_USERNAME, MAIL_PASSWORD)
+            smtp.send_message(msg)
+        return True
+    except Exception as exc:
+        app.logger.error(f'Failed to send approval email: {exc}')
+        return False
+
+
+def agent_required(view):
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if "agent_id" not in session:
+            return redirect(url_for("agent_login"))
+
+        conn = get_db()
+        agent = conn.execute(
+            "SELECT is_approved FROM agents WHERE id = ?",
+            (session["agent_id"],),
+        ).fetchone()
+        conn.close()
+
+        if not agent or agent["is_approved"] != 1:
+            session.clear()
+            flash("Your account is not approved yet.", "error")
+            return redirect(url_for("agent_login"))
+
+        return view(*args, **kwargs)
+
+    return wrapped_view
+
+
+def admin_required(view):
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if not session.get("admin_logged_in"):
+            return redirect(url_for("admin_login"))
+        return view(*args, **kwargs)
+    return wrapped_view
+
+
 @app.context_processor
 def inject_globals():
     return {'site':SITE,'social':SOCIAL,'projects':PROJECTS,'services':SERVICES,'regions':REGIONS,'industries':INDUSTRIES,'articles':ARTICLES,'now':datetime.now()}
 
+
+# ============================================================
+# PUBLIC ROUTES
+# ============================================================
+
 @app.route('/')
 def home(): return render_template('index.html')
+
 @app.route('/about')
 def about(): return render_template('about.html')
+
 @app.route('/vision')
 def vision(): return render_template('vision.html')
+
 @app.route('/services')
 def services(): return render_template('services.html')
+
 @app.route('/work')
 def work(): return render_template('work.html',projects=PROJECTS)
+
 @app.route('/work/<slug>')
 def project_detail(slug):
     project=next((p for p in PROJECTS if p['id']==slug),None)
     if not project: abort(404)
     return render_template('project_detail.html',project=project)
+
 @app.route('/services/<slug>')
 def service_detail(slug):
     service=next((s for s in SERVICES if s['slug']==slug),None)
     if not service: abort(404)
     return render_template('service_detail.html',service=service)
+
 @app.route('/locations/<slug>')
 def region_detail(slug):
     region=next((r for r in REGIONS if r['slug']==slug),None)
     if not region: abort(404)
     return render_template('region_detail.html',region=region)
+
 @app.route('/industries/<slug>')
 def industry_detail(slug):
     industry=next((i for i in INDUSTRIES if i['slug']==slug),None)
@@ -142,11 +404,566 @@ def industry_detail(slug):
 
 @app.route('/insights')
 def insights(): return render_template('insights.html')
+
 @app.route('/insights/<slug>')
 def article_detail(slug):
     article=next((a for a in ARTICLES if a['slug']==slug),None)
     if not article: abort(404)
     return render_template('article_detail.html',article=article)
+
+
+# ============================================================
+# AGENT AUTH
+# ============================================================
+
+@app.route('/agent-login', methods=['GET', 'POST'])
+def agent_login():
+
+    if "agent_id" in session:
+        return redirect(url_for("agent_dashboard"))
+
+    if request.method == "POST":
+
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not email or not password:
+            flash("Please enter your email and password.", "error")
+            return render_template("agent-login.html")
+
+        conn = get_db()
+
+        agent = conn.execute(
+            "SELECT * FROM agents WHERE email = ?",
+            (email,)
+        ).fetchone()
+
+        conn.close()
+
+        if agent and check_password_hash(
+            agent["password_hash"],
+            password
+        ):
+
+            if not agent["is_approved"]:
+                if agent["is_approved"] == -1:
+                    flash(
+                        "Your agent account has been rejected. "
+                        "Contact the administrator.",
+                        "error",
+                    )
+                else:
+                    flash(
+                        "Your account is pending admin approval. "
+                        "Please try again later.",
+                        "error",
+                    )
+                return render_template("agent-login.html")
+
+            session.clear()
+
+            session["agent_id"] = agent["id"]
+            session["agent_name"] = agent["name"]
+            session["agent_email"] = agent["email"]
+
+            return redirect(url_for("agent_dashboard"))
+
+        flash("Invalid email or password.", "error")
+
+    return render_template("agent-login.html")
+
+
+@app.route('/become-agent')
+def become_agent():
+    return render_template('become-agent.html')
+
+
+@app.route('/agent-register', methods=['GET', 'POST'])
+def agent_register():
+
+    if "agent_id" in session:
+        return redirect(url_for("agent_dashboard"))
+
+    if request.method == "POST":
+
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        phone = request.form.get("phone", "").strip()
+        nin = request.form.get("nin", "").strip()
+        dob = request.form.get("date_of_birth", "").strip()
+        state = request.form.get("state", "").strip()
+        address = request.form.get("address", "").strip()
+        occupation = request.form.get("occupation", "").strip()
+        motivation = request.form.get("motivation", "").strip()
+        heard_from = request.form.get("heard_from", "").strip()
+        bank_name = request.form.get("bank_name", "").strip()
+        account_number = request.form.get("account_number", "").strip()
+        account_name = request.form.get("account_name", "").strip()
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+
+        if not name or not email or not password:
+            flash("Please fill in all required fields.", "error")
+            return render_template("agent-register.html")
+
+        if not phone or not nin or not state:
+            flash("Phone, NIN and State are required.", "error")
+            return render_template("agent-register.html")
+
+        if password != confirm:
+            flash("Passwords do not match.", "error")
+            return render_template("agent-register.html")
+
+        if len(password) < 8:
+            flash("Password must be at least 8 characters.", "error")
+            return render_template("agent-register.html")
+
+        if not nin.isdigit() or len(nin) != 11:
+            flash("NIN must be exactly 11 digits.", "error")
+            return render_template("agent-register.html")
+
+        if account_number and (not account_number.isdigit() or len(account_number) != 10):
+            flash("Account number must be exactly 10 digits.", "error")
+            return render_template("agent-register.html")
+
+        conn = get_db()
+
+        existing = conn.execute(
+            "SELECT id FROM agents WHERE email = ?", (email,)
+        ).fetchone()
+
+        if existing:
+            conn.close()
+            flash("An account with that email already exists.", "error")
+            return render_template("agent-register.html")
+
+        nin_existing = conn.execute(
+            "SELECT id FROM agents WHERE nin = ?", (nin,)
+        ).fetchone()
+
+        if nin_existing:
+            conn.close()
+            flash("That NIN is already registered.", "error")
+            return render_template("agent-register.html")
+
+        conn.execute(
+            """
+            INSERT INTO agents (
+                name, email, phone, nin, date_of_birth, state, address,
+                occupation, motivation, heard_from,
+                bank_name, account_number, account_name,
+                password_hash, is_approved
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+            """,
+            (
+                name, email, phone, nin, dob, state, address,
+                occupation, motivation, heard_from,
+                bank_name, account_number, account_name,
+                generate_password_hash(password),
+            ),
+        )
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for("agent_pending"))
+
+    return render_template("agent-register.html")
+
+
+@app.route('/agent-pending')
+def agent_pending():
+    return render_template('agent-pending.html')
+
+
+# ============================================================
+# AGENT DASHBOARD
+# ============================================================
+
+@app.route('/agent-dashboard')
+@agent_required
+def agent_dashboard():
+    conn = get_db()
+
+    leads = conn.execute(
+        "SELECT * FROM leads WHERE agent_id = ? ORDER BY created_at DESC",
+        (session["agent_id"],),
+    ).fetchall()
+
+    stats = {
+        "total": len(leads),
+        "pending": sum(1 for l in leads if l["status"] == "pending"),
+        "rejected": sum(1 for l in leads if l["status"] == "rejected"),
+        "in_progress": sum(
+            1 for l in leads
+            if l["status"] in {"approved", "contacted", "talking", "negotiating"}
+        ),
+        "building": sum(
+            1 for l in leads
+            if l["status"] in {"project_confirmed", "building"}
+        ),
+        "awaiting_payment": sum(
+            1 for l in leads if l["status"] == "payment_received"
+        ),
+        "paid": sum(
+            1 for l in leads
+            if l["status"] in {"commission_received", "successful"}
+        ),
+        "lost": sum(1 for l in leads if l["status"] == "lost"),
+    }
+
+    conn.close()
+
+    return render_template(
+        "agent-dashboard.html",
+        agent_name=session.get("agent_name"),
+        agent_email=session.get("agent_email"),
+        leads=leads,
+        stats=stats,
+    )
+
+
+@app.route('/agent/lead/new', methods=['POST'])
+@agent_required
+def agent_add_lead():
+    conn = get_db()
+    conn.execute(
+        """
+        INSERT INTO leads (agent_id, name, email, phone, company, service, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            session["agent_id"],
+            request.form.get("name", "").strip(),
+            request.form.get("email", "").strip(),
+            request.form.get("phone", "").strip(),
+            request.form.get("company", "").strip(),
+            request.form.get("service", "").strip(),
+            request.form.get("notes", "").strip(),
+        ),
+    )
+    conn.commit()
+    conn.close()
+    flash("Lead submitted for admin review.", "success")
+    return redirect(url_for("agent_dashboard"))
+
+
+@app.route('/agent/lead/<int:lead_id>/status', methods=['POST'])
+@agent_required
+def agent_update_lead_status(lead_id):
+
+    new_status = request.form.get("status", "").strip()
+
+    if new_status not in ALLOWED_AGENT_STATUSES:
+        flash("Invalid status.", "error")
+        return redirect(url_for("agent_dashboard"))
+
+    conn = get_db()
+
+    lead = conn.execute(
+        "SELECT * FROM leads WHERE id = ? AND agent_id = ?",
+        (lead_id, session["agent_id"]),
+    ).fetchone()
+
+    if not lead:
+        conn.close()
+        flash("Lead not found.", "error")
+        return redirect(url_for("agent_dashboard"))
+
+    if lead["status"] == "pending":
+        conn.close()
+        flash("This lead is still awaiting admin approval.", "error")
+        return redirect(url_for("agent_dashboard"))
+
+    if lead["status"] == "rejected":
+        conn.close()
+        flash("This lead was rejected by admin and cannot be updated.", "error")
+        return redirect(url_for("agent_dashboard"))
+
+    conn.execute(
+        "UPDATE leads SET status = ? WHERE id = ?",
+        (new_status, lead_id),
+    )
+    conn.commit()
+    conn.close()
+
+    flash(f"Lead status updated to “{new_status.replace('_', ' ')}”.", "success")
+    return redirect(url_for("agent_dashboard"))
+
+
+@app.route('/agent-logout')
+def agent_logout():
+    session.clear()
+    flash("You have been logged out.", "success")
+    return redirect(url_for("agent_login"))
+
+
+# ============================================================
+# ADMIN
+# ============================================================
+
+@app.route('/admin-register', methods=['GET', 'POST'])
+def admin_register():
+
+    conn = get_db()
+    admin_count = conn.execute("SELECT COUNT(*) FROM admins").fetchone()[0]
+
+    if admin_count > 0:
+        conn.close()
+        flash("Admin setup is already complete.", "error")
+        return redirect(url_for("admin_login"))
+
+    if request.method == "POST":
+
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+
+        if not name or not email or not password:
+            conn.close()
+            flash("Please fill in all fields.", "error")
+            return render_template("admin-register.html")
+
+        if password != confirm:
+            conn.close()
+            flash("Passwords do not match.", "error")
+            return render_template("admin-register.html")
+
+        if len(password) < 8:
+            conn.close()
+            flash("Password must be at least 8 characters.", "error")
+            return render_template("admin-register.html")
+
+        conn.execute(
+            "INSERT INTO admins (name, email, password_hash) VALUES (?, ?, ?)",
+            (name, email, generate_password_hash(password)),
+        )
+        conn.commit()
+        conn.close()
+
+        flash("Admin account created. Please log in.", "success")
+        return redirect(url_for("admin_login"))
+
+    conn.close()
+    return render_template("admin-register.html")
+
+
+@app.route('/admin-login', methods=['GET', 'POST'])
+def admin_login():
+
+    if session.get("admin_logged_in"):
+        return redirect(url_for("admin_dashboard"))
+
+    if request.method == "POST":
+
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not email or not password:
+            flash("Please enter your email and password.", "error")
+            return render_template("admin-login.html")
+
+        conn = get_db()
+        admin = conn.execute(
+            "SELECT * FROM admins WHERE email = ?", (email,)
+        ).fetchone()
+        conn.close()
+
+        if admin and check_password_hash(admin["password_hash"], password):
+            session.clear()
+            session["admin_logged_in"] = True
+            session["admin_id"] = admin["id"]
+            session["admin_name"] = admin["name"]
+            session["admin_email"] = admin["email"]
+            return redirect(url_for("admin_dashboard"))
+
+        flash("Invalid admin credentials.", "error")
+
+    return render_template("admin-login.html")
+
+
+@app.route('/admin-logout')
+def admin_logout():
+    session.clear()
+    flash("Signed out of admin.", "success")
+    return redirect(url_for("admin_login"))
+
+
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    conn = get_db()
+
+    agents = conn.execute("""
+        SELECT a.*,
+            (SELECT COUNT(*) FROM leads WHERE agent_id = a.id) AS lead_count
+        FROM agents a
+        ORDER BY a.created_at DESC
+    """).fetchall()
+
+    leads = conn.execute("""
+        SELECT l.*, a.name AS agent_name, a.email AS agent_email
+        FROM leads l
+        JOIN agents a ON a.id = l.agent_id
+        ORDER BY l.created_at DESC
+    """).fetchall()
+
+    stats = {
+        "total_agents": conn.execute("SELECT COUNT(*) FROM agents").fetchone()[0],
+        "pending_agents": conn.execute(
+            "SELECT COUNT(*) FROM agents WHERE is_approved = 0"
+        ).fetchone()[0],
+        "total_leads": conn.execute("SELECT COUNT(*) FROM leads").fetchone()[0],
+        "pending_leads": conn.execute(
+            "SELECT COUNT(*) FROM leads WHERE status = 'pending'"
+        ).fetchone()[0],
+        "building_leads": conn.execute(
+            "SELECT COUNT(*) FROM leads WHERE status IN ('project_confirmed','building')"
+        ).fetchone()[0],
+        "awaiting_payment": conn.execute(
+            "SELECT COUNT(*) FROM leads WHERE status = 'payment_received'"
+        ).fetchone()[0],
+        "successful_leads": conn.execute(
+            "SELECT COUNT(*) FROM leads WHERE status = 'successful'"
+        ).fetchone()[0],
+    }
+
+    conn.close()
+
+    return render_template(
+        "admin.html", agents=agents, leads=leads, stats=stats
+    )
+
+
+@app.route('/admin/agent/<int:agent_id>')
+@admin_required
+def admin_view_agent(agent_id):
+    conn = get_db()
+
+    agent = conn.execute(
+        "SELECT * FROM agents WHERE id = ?", (agent_id,)
+    ).fetchone()
+
+    if not agent:
+        conn.close()
+        flash("Agent not found.", "error")
+        return redirect(url_for("admin_dashboard"))
+
+    leads = conn.execute(
+        """
+        SELECT * FROM leads
+        WHERE agent_id = ?
+        ORDER BY created_at DESC
+        """,
+        (agent_id,),
+    ).fetchall()
+
+    stats = {
+        "total": len(leads),
+        "pending": sum(1 for l in leads if l["status"] == "pending"),
+        "approved": sum(1 for l in leads if l["status"] == "approved"),
+        "rejected": sum(1 for l in leads if l["status"] == "rejected"),
+    }
+
+    conn.close()
+
+    return render_template(
+        "admin-agent-detail.html",
+        agent=agent,
+        leads=leads,
+        stats=stats,
+    )
+
+
+@app.route('/admin/agent/<int:agent_id>/approve', methods=['POST'])
+@admin_required
+def admin_approve_agent(agent_id):
+    conn = get_db()
+
+    agent = conn.execute(
+        "SELECT name, email, is_approved FROM agents WHERE id = ?",
+        (agent_id,)
+    ).fetchone()
+
+    if not agent:
+        conn.close()
+        flash("Agent not found.", "error")
+        return redirect(url_for("admin_dashboard"))
+
+    already_approved = agent["is_approved"] == 1
+
+    conn.execute("UPDATE agents SET is_approved = 1 WHERE id = ?", (agent_id,))
+    conn.commit()
+    conn.close()
+
+    if already_approved:
+        flash(f"{agent['name']} was already approved.", "success")
+        return redirect(url_for("admin_dashboard"))
+
+    sent = send_agent_approved_email(agent["name"], agent["email"])
+
+    if sent:
+        flash(f"{agent['name']} approved. Notification email sent.", "success")
+    else:
+        flash(
+            f"{agent['name']} approved. "
+            f"Email could not be sent — check MAIL_USERNAME / MAIL_PASSWORD.",
+            "error",
+        )
+
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route('/admin/agent/<int:agent_id>/reject', methods=['POST'])
+@admin_required
+def admin_reject_agent(agent_id):
+    conn = get_db()
+    conn.execute("UPDATE agents SET is_approved = -1 WHERE id = ?", (agent_id,))
+    conn.commit()
+    conn.close()
+    flash("Agent rejected.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route('/admin/agent/<int:agent_id>/delete', methods=['POST'])
+@admin_required
+def admin_delete_agent(agent_id):
+    conn = get_db()
+    conn.execute("DELETE FROM leads WHERE agent_id = ?", (agent_id,))
+    conn.execute("DELETE FROM agents WHERE id = ?", (agent_id,))
+    conn.commit()
+    conn.close()
+    flash("Agent and their leads deleted.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route('/admin/lead/<int:lead_id>/approve', methods=['POST'])
+@admin_required
+def admin_approve_lead(lead_id):
+    conn = get_db()
+    conn.execute("UPDATE leads SET status = 'approved' WHERE id = ?", (lead_id,))
+    conn.commit()
+    conn.close()
+    flash("Lead approved.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route('/admin/lead/<int:lead_id>/reject', methods=['POST'])
+@admin_required
+def admin_reject_lead(lead_id):
+    conn = get_db()
+    conn.execute("UPDATE leads SET status = 'rejected' WHERE id = ?", (lead_id,))
+    conn.commit()
+    conn.close()
+    flash("Lead rejected.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+# ============================================================
+# CONTACT / SEO
+# ============================================================
+
 @app.route('/contact',methods=['GET','POST'])
 def contact():
     if request.method=='POST':
@@ -154,6 +971,7 @@ def contact():
         flash('Your message has been sent. We\'ll get back to you soon.' if sent else f'Something went wrong. Please email {MAIL_RECIPIENT} directly.', 'success' if sent else 'error')
         return redirect(url_for('contact'))
     return render_template('contact.html')
+
 
 @app.route('/sitemap.xml')
 def sitemap():
@@ -170,8 +988,11 @@ def sitemap():
     for p in PROJECTS: add('project_detail',slug=p['id']); pages[-1]['priority']='0.7'
     return render_template('sitemap.xml',pages=pages), {'Content-Type':'application/xml'}
 
+
 @app.route('/robots.txt')
 def robots():
     return render_template('robots.txt'), {'Content-Type':'text/plain'}
 
-if __name__=='__main__': app.run(debug=True,host='0.0.0.0',port=5000)
+
+if __name__=='__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
