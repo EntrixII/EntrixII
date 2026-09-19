@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ============================================================
-# AGENT DATABASE
+# DATABASE
 # ============================================================
 
 DATABASE = os.path.join(
@@ -64,6 +64,10 @@ def init_db():
             company TEXT,
             service TEXT,
             notes TEXT,
+            budget REAL,
+            agreed_price REAL,
+            paid_amount REAL,
+            paid_confirmed_at TIMESTAMP,
             status TEXT NOT NULL DEFAULT 'pending',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (agent_id) REFERENCES agents(id)
@@ -80,8 +84,8 @@ def init_db():
         )
     """)
 
-    # Migration: add new columns to old agents tables
-    new_columns = [
+    # Migrate agents
+    agent_columns = [
         ("phone", "TEXT"),
         ("nin", "TEXT"),
         ("date_of_birth", "TEXT"),
@@ -95,15 +99,30 @@ def init_db():
         ("account_name", "TEXT"),
         ("is_approved", "INTEGER NOT NULL DEFAULT 0"),
     ]
-
-    existing_cols = {
+    existing_agent_cols = {
         row[1] for row in conn.execute("PRAGMA table_info(agents)").fetchall()
     }
-
-    for col_name, col_type in new_columns:
-        if col_name not in existing_cols:
+    for col_name, col_type in agent_columns:
+        if col_name not in existing_agent_cols:
             try:
                 conn.execute(f"ALTER TABLE agents ADD COLUMN {col_name} {col_type}")
+            except sqlite3.OperationalError:
+                pass
+
+    # Migrate leads
+    lead_columns = [
+        ("budget", "REAL"),
+        ("agreed_price", "REAL"),
+        ("paid_amount", "REAL"),
+        ("paid_confirmed_at", "TIMESTAMP"),
+    ]
+    existing_lead_cols = {
+        row[1] for row in conn.execute("PRAGMA table_info(leads)").fetchall()
+    }
+    for col_name, col_type in lead_columns:
+        if col_name not in existing_lead_cols:
+            try:
+                conn.execute(f"ALTER TABLE leads ADD COLUMN {col_name} {col_type}")
             except sqlite3.OperationalError:
                 pass
 
@@ -166,30 +185,46 @@ create_default_admin()
 # LEAD STATUSES
 # ============================================================
 
-ALLOWED_AGENT_STATUSES = {
-    "approved",
-    "contacted",
-    "talking",
-    "negotiating",
-    "project_confirmed",
-    "building",
-    "payment_received",
-    "commission_received",
-    "successful",
-    "lost",
-}
+AGENT_CAN_SET = {"accepted", "lost"}  # what agents can change
+COMMISSION_RATE = 0.30
 
+
+@app.template_filter("naira")
+def naira_filter(value):
+    try:
+        return f"₦{float(value):,.2f}"
+    except (TypeError, ValueError):
+        return "—"
+
+
+@app.template_filter("commission_of")
+def commission_of_filter(value):
+    try:
+        return float(value) * COMMISSION_RATE
+    except (TypeError, ValueError):
+        return 0
+
+
+# ============================================================
+# GOOGLE VERIFICATION
+# ============================================================
 
 @app.route('/google1236e1335ed123fa.html')
 def google_verification():
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'google1236e1335ed123fa.html')
 
 
+# ============================================================
+# CONFIG
+# ============================================================
+
 MAIL_SERVER = 'smtp.gmail.com'
 MAIL_PORT = 587
 MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
 MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
 MAIL_RECIPIENT = os.environ.get('MAIL_RECIPIENT', 'entrix2026@gmail.com')
+
+SUPPORT_PHONE = "+2347068133655"
 
 SITE = {
     'name': 'Entrix II',
@@ -230,7 +265,6 @@ REGIONS = [
     {'slug':'kaduna','name':'Kaduna','title':'Web Development & Digital Services in Kaduna','intro':'Entrix II provides web development, e-commerce, SEO and custom software services for Kaduna businesses and organizations.','body':['A strong digital presence can help Kaduna businesses reach customers beyond their immediate area. We build responsive websites and applications that make services, products and contact paths clear.','Whether the project is a company website, online store, dashboard or custom business system, the goal is a maintainable product that supports the organization after launch.'], 'keywords':['web development Kaduna','web design Kaduna','software development Kaduna','SEO Kaduna','website developer Kaduna']},
 ]
 
-
 INDUSTRIES = [
     {'slug':'real-estate','name':'Real Estate','title':'Web Development & Digital Services for Real Estate Businesses','intro':'Websites, property platforms, lead-generation systems and SEO for real estate businesses in Nigeria and Africa.','body':['Real estate websites need more than attractive property photos. Buyers and investors need clear listings, location information, trust signals and simple ways to enquire.','Entrix II can build property websites, listing systems, lead forms, search interfaces and supporting SEO content around the way an agency or developer actually works.']},
     {'slug':'ecommerce-retail','name':'E-commerce & Retail','title':'E-commerce Development for Retail Businesses in Nigeria','intro':'Online stores, payment integrations, product catalogs and conversion-focused shopping experiences for Nigerian retailers.','body':['A useful retail website should make products easy to discover, understand and buy on a phone. Checkout, payment verification and order handling are part of the product—not afterthoughts.','We build online stores and supporting systems that can grow from a simple catalog into a more capable commerce platform.']},
@@ -261,6 +295,30 @@ PROJECTS = [
 ]
 
 
+# ============================================================
+# EMAIL HELPERS
+# ============================================================
+
+def _send_email(to_email, subject, body):
+    if not MAIL_USERNAME or not MAIL_PASSWORD:
+        app.logger.warning('MAIL_USERNAME / MAIL_PASSWORD not set — email not sent.')
+        return False
+    msg = EmailMessage()
+    msg['Subject'] = subject
+    msg['From'] = MAIL_USERNAME
+    msg['To'] = to_email
+    msg.set_content(body)
+    try:
+        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=10) as smtp:
+            smtp.starttls()
+            smtp.login(MAIL_USERNAME, MAIL_PASSWORD)
+            smtp.send_message(msg)
+        return True
+    except Exception as exc:
+        app.logger.error(f'Failed to send email: {exc}')
+        return False
+
+
 def send_contact_email(form):
     if not MAIL_USERNAME or not MAIL_PASSWORD:
         app.logger.warning('MAIL_USERNAME / MAIL_PASSWORD not set — contact email not sent.')
@@ -279,16 +337,7 @@ def send_contact_email(form):
 
 
 def send_agent_approved_email(agent_name, agent_email):
-    if not MAIL_USERNAME or not MAIL_PASSWORD:
-        app.logger.warning(
-            'MAIL_USERNAME / MAIL_PASSWORD not set — approval email not sent.'
-        )
-        return False
-
     login_url = url_for('agent_login', _external=True)
-
-    subject = "Your Entrix II agent account has been approved"
-
     body = f"""Hi {agent_name},
 
 Good news — your Entrix II agent account has been approved.
@@ -302,25 +351,68 @@ Your login email: {agent_email}
 If you have any questions, just reply to this email.
 
 — Entrix II
-https://entrixii.com.ng
+{SITE['url']}
 """
+    return _send_email(
+        agent_email,
+        "Your Entrix II agent account has been approved",
+        body,
+    )
 
-    msg = EmailMessage()
-    msg['Subject'] = subject
-    msg['From'] = MAIL_USERNAME
-    msg['To'] = agent_email
-    msg.set_content(body)
 
-    try:
-        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=10) as smtp:
-            smtp.starttls()
-            smtp.login(MAIL_USERNAME, MAIL_PASSWORD)
-            smtp.send_message(msg)
-        return True
-    except Exception as exc:
-        app.logger.error(f'Failed to send approval email: {exc}')
-        return False
+def send_agreed_price_email(agent_name, agent_email, lead_name, agreed_price):
+    commission = float(agreed_price) * COMMISSION_RATE
+    dashboard_url = url_for('agent_login', _external=True)
+    body = f"""Hi {agent_name},
 
+The agreed price for the lead "{lead_name}" has been set by the Entrix II team.
+
+Agreed price: ₦{float(agreed_price):,.2f}
+Your commission (30%): ₦{commission:,.2f}
+
+You can track progress from your dashboard:
+
+{dashboard_url}
+
+Once the project is completed and payment is processed, we will notify you again.
+
+— Entrix II
+{SITE['url']}
+"""
+    return _send_email(
+        agent_email,
+        f"Agreed price set for {lead_name}",
+        body,
+    )
+
+
+def send_paid_email(agent_name, agent_email, lead_name, paid_amount):
+    dashboard_url = url_for('agent_login', _external=True)
+    body = f"""Hi {agent_name},
+
+You have been paid ₦{float(paid_amount):,.2f} for the lead "{lead_name}".
+
+Please log into your dashboard and confirm receipt:
+
+{dashboard_url}
+
+If you do not see the payment in your account, please contact support:
+
+{SUPPORT_PHONE}
+
+— Entrix II
+{SITE['url']}
+"""
+    return _send_email(
+        agent_email,
+        f"You've been paid for {lead_name}",
+        body,
+    )
+
+
+# ============================================================
+# AUTH DECORATORS
+# ============================================================
 
 def agent_required(view):
     @wraps(view)
@@ -356,7 +448,18 @@ def admin_required(view):
 
 @app.context_processor
 def inject_globals():
-    return {'site':SITE,'social':SOCIAL,'projects':PROJECTS,'services':SERVICES,'regions':REGIONS,'industries':INDUSTRIES,'articles':ARTICLES,'now':datetime.now()}
+    return {
+        'site': SITE,
+        'social': SOCIAL,
+        'projects': PROJECTS,
+        'services': SERVICES,
+        'regions': REGIONS,
+        'industries': INDUSTRIES,
+        'articles': ARTICLES,
+        'now': datetime.now(),
+        'support_phone': SUPPORT_PHONE,
+        'commission_rate': COMMISSION_RATE,
+    }
 
 
 # ============================================================
@@ -376,40 +479,40 @@ def vision(): return render_template('vision.html')
 def services(): return render_template('services.html')
 
 @app.route('/work')
-def work(): return render_template('work.html',projects=PROJECTS)
+def work(): return render_template('work.html', projects=PROJECTS)
 
 @app.route('/work/<slug>')
 def project_detail(slug):
-    project=next((p for p in PROJECTS if p['id']==slug),None)
+    project = next((p for p in PROJECTS if p['id'] == slug), None)
     if not project: abort(404)
-    return render_template('project_detail.html',project=project)
+    return render_template('project_detail.html', project=project)
 
 @app.route('/services/<slug>')
 def service_detail(slug):
-    service=next((s for s in SERVICES if s['slug']==slug),None)
+    service = next((s for s in SERVICES if s['slug'] == slug), None)
     if not service: abort(404)
-    return render_template('service_detail.html',service=service)
+    return render_template('service_detail.html', service=service)
 
 @app.route('/locations/<slug>')
 def region_detail(slug):
-    region=next((r for r in REGIONS if r['slug']==slug),None)
+    region = next((r for r in REGIONS if r['slug'] == slug), None)
     if not region: abort(404)
-    return render_template('region_detail.html',region=region)
+    return render_template('region_detail.html', region=region)
 
 @app.route('/industries/<slug>')
 def industry_detail(slug):
-    industry=next((i for i in INDUSTRIES if i['slug']==slug),None)
+    industry = next((i for i in INDUSTRIES if i['slug'] == slug), None)
     if not industry: abort(404)
-    return render_template('industry_detail.html',industry=industry)
+    return render_template('industry_detail.html', industry=industry)
 
 @app.route('/insights')
 def insights(): return render_template('insights.html')
 
 @app.route('/insights/<slug>')
 def article_detail(slug):
-    article=next((a for a in ARTICLES if a['slug']==slug),None)
+    article = next((a for a in ARTICLES if a['slug'] == slug), None)
     if not article: abort(404)
-    return render_template('article_detail.html',article=article)
+    return render_template('article_detail.html', article=article)
 
 
 # ============================================================
@@ -432,40 +535,24 @@ def agent_login():
             return render_template("agent-login.html")
 
         conn = get_db()
-
         agent = conn.execute(
-            "SELECT * FROM agents WHERE email = ?",
-            (email,)
+            "SELECT * FROM agents WHERE email = ?", (email,)
         ).fetchone()
-
         conn.close()
 
-        if agent and check_password_hash(
-            agent["password_hash"],
-            password
-        ):
+        if agent and check_password_hash(agent["password_hash"], password):
 
             if not agent["is_approved"]:
                 if agent["is_approved"] == -1:
-                    flash(
-                        "Your agent account has been rejected. "
-                        "Contact the administrator.",
-                        "error",
-                    )
+                    flash("Your agent account has been rejected. Contact the administrator.", "error")
                 else:
-                    flash(
-                        "Your account is pending admin approval. "
-                        "Please try again later.",
-                        "error",
-                    )
+                    flash("Your account is pending admin approval. Please try again later.", "error")
                 return render_template("agent-login.html")
 
             session.clear()
-
             session["agent_id"] = agent["id"]
             session["agent_name"] = agent["name"]
             session["agent_email"] = agent["email"]
-
             return redirect(url_for("agent_dashboard"))
 
         flash("Invalid email or password.", "error")
@@ -505,43 +592,30 @@ def agent_register():
         if not name or not email or not password:
             flash("Please fill in all required fields.", "error")
             return render_template("agent-register.html")
-
         if not phone or not nin or not state:
             flash("Phone, NIN and State are required.", "error")
             return render_template("agent-register.html")
-
         if password != confirm:
             flash("Passwords do not match.", "error")
             return render_template("agent-register.html")
-
         if len(password) < 8:
             flash("Password must be at least 8 characters.", "error")
             return render_template("agent-register.html")
-
         if not nin.isdigit() or len(nin) != 11:
             flash("NIN must be exactly 11 digits.", "error")
             return render_template("agent-register.html")
-
         if account_number and (not account_number.isdigit() or len(account_number) != 10):
             flash("Account number must be exactly 10 digits.", "error")
             return render_template("agent-register.html")
 
         conn = get_db()
 
-        existing = conn.execute(
-            "SELECT id FROM agents WHERE email = ?", (email,)
-        ).fetchone()
-
-        if existing:
+        if conn.execute("SELECT id FROM agents WHERE email = ?", (email,)).fetchone():
             conn.close()
             flash("An account with that email already exists.", "error")
             return render_template("agent-register.html")
 
-        nin_existing = conn.execute(
-            "SELECT id FROM agents WHERE nin = ?", (nin,)
-        ).fetchone()
-
-        if nin_existing:
+        if conn.execute("SELECT id FROM agents WHERE nin = ?", (nin,)).fetchone():
             conn.close()
             flash("That NIN is already registered.", "error")
             return render_template("agent-register.html")
@@ -553,8 +627,7 @@ def agent_register():
                 occupation, motivation, heard_from,
                 bank_name, account_number, account_name,
                 password_hash, is_approved
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
             """,
             (
                 name, email, phone, nin, dob, state, address,
@@ -590,26 +663,36 @@ def agent_dashboard():
         (session["agent_id"],),
     ).fetchall()
 
+    def sum_commission(rows, amount_field):
+        total = 0.0
+        for r in rows:
+            v = r[amount_field]
+            if v:
+                total += float(v) * COMMISSION_RATE
+        return total
+
     stats = {
         "total": len(leads),
         "pending": sum(1 for l in leads if l["status"] == "pending"),
         "rejected": sum(1 for l in leads if l["status"] == "rejected"),
+        "lost": sum(1 for l in leads if l["status"] == "lost"),
+        "approved": sum(1 for l in leads if l["status"] == "approved"),
         "in_progress": sum(
             1 for l in leads
-            if l["status"] in {"approved", "contacted", "talking", "negotiating"}
+            if l["status"] in {"accepted", "building", "completion", "prepare_to_be_paid"}
         ),
-        "building": sum(
-            1 for l in leads
-            if l["status"] in {"project_confirmed", "building"}
+        "awaiting_confirmation": sum(1 for l in leads if l["status"] == "paid"),
+        "completed": sum(1 for l in leads if l["status"] == "paid_confirmed"),
+
+        "estimated": sum_commission(leads, "budget"),
+        "awaiting_amount": sum_commission(
+            [l for l in leads if l["status"] in {"accepted", "building", "completion", "prepare_to_be_paid"}],
+            "agreed_price",
         ),
-        "awaiting_payment": sum(
-            1 for l in leads if l["status"] == "payment_received"
+        "earned": sum(
+            float(l["paid_amount"]) for l in leads
+            if l["status"] == "paid_confirmed" and l["paid_amount"]
         ),
-        "paid": sum(
-            1 for l in leads
-            if l["status"] in {"commission_received", "successful"}
-        ),
-        "lost": sum(1 for l in leads if l["status"] == "lost"),
     }
 
     conn.close()
@@ -626,11 +709,20 @@ def agent_dashboard():
 @app.route('/agent/lead/new', methods=['POST'])
 @agent_required
 def agent_add_lead():
+    budget_raw = request.form.get("budget", "").strip()
+    budget = None
+    if budget_raw:
+        try:
+            budget = float(budget_raw)
+        except ValueError:
+            flash("Budget must be a number.", "error")
+            return redirect(url_for("agent_dashboard"))
+
     conn = get_db()
     conn.execute(
         """
-        INSERT INTO leads (agent_id, name, email, phone, company, service, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO leads (agent_id, name, email, phone, company, service, notes, budget)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             session["agent_id"],
@@ -640,6 +732,7 @@ def agent_add_lead():
             request.form.get("company", "").strip(),
             request.form.get("service", "").strip(),
             request.form.get("notes", "").strip(),
+            budget,
         ),
     )
     conn.commit()
@@ -648,18 +741,19 @@ def agent_add_lead():
     return redirect(url_for("agent_dashboard"))
 
 
-@app.route('/agent/lead/<int:lead_id>/status', methods=['POST'])
+@app.route('/agent/lead/<int:lead_id>/budget', methods=['POST'])
 @agent_required
-def agent_update_lead_status(lead_id):
-
-    new_status = request.form.get("status", "").strip()
-
-    if new_status not in ALLOWED_AGENT_STATUSES:
-        flash("Invalid status.", "error")
-        return redirect(url_for("agent_dashboard"))
+def agent_update_lead_budget(lead_id):
+    budget_raw = request.form.get("budget", "").strip()
+    budget = None
+    if budget_raw:
+        try:
+            budget = float(budget_raw)
+        except ValueError:
+            flash("Budget must be a number.", "error")
+            return redirect(url_for("agent_dashboard"))
 
     conn = get_db()
-
     lead = conn.execute(
         "SELECT * FROM leads WHERE id = ? AND agent_id = ?",
         (lead_id, session["agent_id"]),
@@ -670,24 +764,96 @@ def agent_update_lead_status(lead_id):
         flash("Lead not found.", "error")
         return redirect(url_for("agent_dashboard"))
 
-    if lead["status"] == "pending":
+    if lead["status"] in ("paid", "paid_confirmed"):
         conn.close()
-        flash("This lead is still awaiting admin approval.", "error")
+        flash("You cannot change the budget for a completed lead.", "error")
         return redirect(url_for("agent_dashboard"))
 
-    if lead["status"] == "rejected":
+    conn.execute("UPDATE leads SET budget = ? WHERE id = ?", (budget, lead_id))
+    conn.commit()
+    conn.close()
+    flash("Budget updated.", "success")
+    return redirect(url_for("agent_dashboard"))
+
+
+@app.route('/agent/lead/<int:lead_id>/accept', methods=['POST'])
+@agent_required
+def agent_accept_lead(lead_id):
+    conn = get_db()
+    lead = conn.execute(
+        "SELECT * FROM leads WHERE id = ? AND agent_id = ?",
+        (lead_id, session["agent_id"]),
+    ).fetchone()
+
+    if not lead:
         conn.close()
-        flash("This lead was rejected by admin and cannot be updated.", "error")
+        flash("Lead not found.", "error")
+        return redirect(url_for("agent_dashboard"))
+
+    if lead["status"] != "approved":
+        conn.close()
+        flash("You can only accept a lead that has been approved by admin.", "error")
+        return redirect(url_for("agent_dashboard"))
+
+    conn.execute("UPDATE leads SET status = 'accepted' WHERE id = ?", (lead_id,))
+    conn.commit()
+    conn.close()
+    flash("Lead marked as accepted. Admin will take it from here.", "success")
+    return redirect(url_for("agent_dashboard"))
+
+
+@app.route('/agent/lead/<int:lead_id>/lose', methods=['POST'])
+@agent_required
+def agent_lose_lead(lead_id):
+    conn = get_db()
+    lead = conn.execute(
+        "SELECT * FROM leads WHERE id = ? AND agent_id = ?",
+        (lead_id, session["agent_id"]),
+    ).fetchone()
+
+    if not lead:
+        conn.close()
+        flash("Lead not found.", "error")
+        return redirect(url_for("agent_dashboard"))
+
+    if lead["status"] not in ("approved", "accepted"):
+        conn.close()
+        flash("You cannot mark this lead as lost at this stage.", "error")
+        return redirect(url_for("agent_dashboard"))
+
+    conn.execute("UPDATE leads SET status = 'lost' WHERE id = ?", (lead_id,))
+    conn.commit()
+    conn.close()
+    flash("Lead marked as lost.", "success")
+    return redirect(url_for("agent_dashboard"))
+
+
+@app.route('/agent/lead/<int:lead_id>/confirm', methods=['POST'])
+@agent_required
+def agent_confirm_receipt(lead_id):
+    conn = get_db()
+    lead = conn.execute(
+        "SELECT * FROM leads WHERE id = ? AND agent_id = ?",
+        (lead_id, session["agent_id"]),
+    ).fetchone()
+
+    if not lead:
+        conn.close()
+        flash("Lead not found.", "error")
+        return redirect(url_for("agent_dashboard"))
+
+    if lead["status"] != "paid":
+        conn.close()
+        flash("This lead is not awaiting confirmation.", "error")
         return redirect(url_for("agent_dashboard"))
 
     conn.execute(
-        "UPDATE leads SET status = ? WHERE id = ?",
-        (new_status, lead_id),
+        "UPDATE leads SET status = 'paid_confirmed', paid_confirmed_at = CURRENT_TIMESTAMP WHERE id = ?",
+        (lead_id,),
     )
     conn.commit()
     conn.close()
-
-    flash(f"Lead status updated to “{new_status.replace('_', ' ')}”.", "success")
+    flash("Payment confirmed. Thank you!", "success")
     return redirect(url_for("agent_dashboard"))
 
 
@@ -699,7 +865,7 @@ def agent_logout():
 
 
 # ============================================================
-# ADMIN
+# ADMIN AUTH
 # ============================================================
 
 @app.route('/admin-register', methods=['GET', 'POST'])
@@ -741,7 +907,6 @@ def admin_register():
         )
         conn.commit()
         conn.close()
-
         flash("Admin account created. Please log in.", "success")
         return redirect(url_for("admin_login"))
 
@@ -790,6 +955,10 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
+# ============================================================
+# ADMIN DASHBOARD
+# ============================================================
+
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
@@ -818,14 +987,23 @@ def admin_dashboard():
         "pending_leads": conn.execute(
             "SELECT COUNT(*) FROM leads WHERE status = 'pending'"
         ).fetchone()[0],
-        "building_leads": conn.execute(
-            "SELECT COUNT(*) FROM leads WHERE status IN ('project_confirmed','building')"
+        "accepted_leads": conn.execute(
+            "SELECT COUNT(*) FROM leads WHERE status = 'accepted'"
         ).fetchone()[0],
-        "awaiting_payment": conn.execute(
-            "SELECT COUNT(*) FROM leads WHERE status = 'payment_received'"
+        "building_leads": conn.execute(
+            "SELECT COUNT(*) FROM leads WHERE status = 'building'"
+        ).fetchone()[0],
+        "completion_leads": conn.execute(
+            "SELECT COUNT(*) FROM leads WHERE status = 'completion'"
+        ).fetchone()[0],
+        "prepare_leads": conn.execute(
+            "SELECT COUNT(*) FROM leads WHERE status = 'prepare_to_be_paid'"
+        ).fetchone()[0],
+        "awaiting_confirm": conn.execute(
+            "SELECT COUNT(*) FROM leads WHERE status = 'paid'"
         ).fetchone()[0],
         "successful_leads": conn.execute(
-            "SELECT COUNT(*) FROM leads WHERE status = 'successful'"
+            "SELECT COUNT(*) FROM leads WHERE status = 'paid_confirmed'"
         ).fetchone()[0],
     }
 
@@ -851,28 +1029,25 @@ def admin_view_agent(agent_id):
         return redirect(url_for("admin_dashboard"))
 
     leads = conn.execute(
-        """
-        SELECT * FROM leads
-        WHERE agent_id = ?
-        ORDER BY created_at DESC
-        """,
+        "SELECT * FROM leads WHERE agent_id = ? ORDER BY created_at DESC",
         (agent_id,),
     ).fetchall()
 
     stats = {
         "total": len(leads),
         "pending": sum(1 for l in leads if l["status"] == "pending"),
-        "approved": sum(1 for l in leads if l["status"] == "approved"),
-        "rejected": sum(1 for l in leads if l["status"] == "rejected"),
+        "in_progress": sum(
+            1 for l in leads
+            if l["status"] in {"accepted", "building", "completion", "prepare_to_be_paid"}
+        ),
+        "completed": sum(1 for l in leads if l["status"] == "paid_confirmed"),
     }
 
     conn.close()
 
     return render_template(
         "admin-agent-detail.html",
-        agent=agent,
-        leads=leads,
-        stats=stats,
+        agent=agent, leads=leads, stats=stats,
     )
 
 
@@ -880,10 +1055,8 @@ def admin_view_agent(agent_id):
 @admin_required
 def admin_approve_agent(agent_id):
     conn = get_db()
-
     agent = conn.execute(
-        "SELECT name, email, is_approved FROM agents WHERE id = ?",
-        (agent_id,)
+        "SELECT name, email, is_approved FROM agents WHERE id = ?", (agent_id,)
     ).fetchone()
 
     if not agent:
@@ -891,27 +1064,20 @@ def admin_approve_agent(agent_id):
         flash("Agent not found.", "error")
         return redirect(url_for("admin_dashboard"))
 
-    already_approved = agent["is_approved"] == 1
-
+    already = agent["is_approved"] == 1
     conn.execute("UPDATE agents SET is_approved = 1 WHERE id = ?", (agent_id,))
     conn.commit()
     conn.close()
 
-    if already_approved:
+    if already:
         flash(f"{agent['name']} was already approved.", "success")
         return redirect(url_for("admin_dashboard"))
 
     sent = send_agent_approved_email(agent["name"], agent["email"])
-
     if sent:
         flash(f"{agent['name']} approved. Notification email sent.", "success")
     else:
-        flash(
-            f"{agent['name']} approved. "
-            f"Email could not be sent — check MAIL_USERNAME / MAIL_PASSWORD.",
-            "error",
-        )
-
+        flash(f"{agent['name']} approved. Email could not be sent.", "error")
     return redirect(url_for("admin_dashboard"))
 
 
@@ -938,6 +1104,18 @@ def admin_delete_agent(agent_id):
     return redirect(url_for("admin_dashboard"))
 
 
+# ============================================================
+# ADMIN LEAD ACTIONS
+# ============================================================
+
+def _load_lead_with_agent(conn, lead_id):
+    return conn.execute("""
+        SELECT l.*, a.name AS agent_name, a.email AS agent_email
+        FROM leads l JOIN agents a ON a.id = l.agent_id
+        WHERE l.id = ?
+    """, (lead_id,)).fetchone()
+
+
 @app.route('/admin/lead/<int:lead_id>/approve', methods=['POST'])
 @admin_required
 def admin_approve_lead(lead_id):
@@ -945,8 +1123,8 @@ def admin_approve_lead(lead_id):
     conn.execute("UPDATE leads SET status = 'approved' WHERE id = ?", (lead_id,))
     conn.commit()
     conn.close()
-    flash("Lead approved.", "success")
-    return redirect(url_for("admin_dashboard"))
+    flash("Lead approved. Agent can now accept or lose it.", "success")
+    return redirect(request.referrer or url_for("admin_dashboard"))
 
 
 @app.route('/admin/lead/<int:lead_id>/reject', methods=['POST'])
@@ -957,18 +1135,167 @@ def admin_reject_lead(lead_id):
     conn.commit()
     conn.close()
     flash("Lead rejected.", "success")
-    return redirect(url_for("admin_dashboard"))
+    return redirect(request.referrer or url_for("admin_dashboard"))
+
+
+@app.route('/admin/lead/<int:lead_id>/agreed-price', methods=['POST'])
+@admin_required
+def admin_set_agreed_price(lead_id):
+    raw = request.form.get("agreed_price", "").strip()
+    try:
+        agreed = float(raw)
+    except ValueError:
+        flash("Agreed price must be a number.", "error")
+        return redirect(request.referrer or url_for("admin_dashboard"))
+
+    if agreed <= 0:
+        flash("Agreed price must be greater than zero.", "error")
+        return redirect(request.referrer or url_for("admin_dashboard"))
+
+    conn = get_db()
+    lead = _load_lead_with_agent(conn, lead_id)
+
+    if not lead:
+        conn.close()
+        flash("Lead not found.", "error")
+        return redirect(url_for("admin_dashboard"))
+
+    if lead["status"] != "accepted":
+        conn.close()
+        flash("You can only set the price on an accepted lead.", "error")
+        return redirect(request.referrer or url_for("admin_dashboard"))
+
+    conn.execute(
+        "UPDATE leads SET agreed_price = ? WHERE id = ?",
+        (agreed, lead_id),
+    )
+    conn.commit()
+    conn.close()
+
+    sent = send_agreed_price_email(
+        lead["agent_name"], lead["agent_email"], lead["name"], agreed
+    )
+    if sent:
+        flash(f"Agreed price set. Email sent to {lead['agent_name']}.", "success")
+    else:
+        flash("Agreed price saved. Email could not be sent.", "error")
+    return redirect(request.referrer or url_for("admin_dashboard"))
+
+
+@app.route('/admin/lead/<int:lead_id>/building', methods=['POST'])
+@admin_required
+def admin_lead_building(lead_id):
+    conn = get_db()
+    lead = _load_lead_with_agent(conn, lead_id)
+
+    if not lead:
+        conn.close()
+        flash("Lead not found.", "error")
+        return redirect(url_for("admin_dashboard"))
+
+    if lead["status"] != "accepted":
+        conn.close()
+        flash("Lead must be in 'accepted' state.", "error")
+        return redirect(request.referrer or url_for("admin_dashboard"))
+
+    if not lead["agreed_price"]:
+        conn.close()
+        flash("Please set the agreed price first.", "error")
+        return redirect(request.referrer or url_for("admin_dashboard"))
+
+    conn.execute("UPDATE leads SET status = 'building' WHERE id = ?", (lead_id,))
+    conn.commit()
+    conn.close()
+    flash("Lead moved to Building.", "success")
+    return redirect(request.referrer or url_for("admin_dashboard"))
+
+
+@app.route('/admin/lead/<int:lead_id>/completion', methods=['POST'])
+@admin_required
+def admin_lead_completion(lead_id):
+    conn = get_db()
+    conn.execute(
+        "UPDATE leads SET status = 'completion' WHERE id = ? AND status = 'building'",
+        (lead_id,),
+    )
+    conn.commit()
+    conn.close()
+    flash("Lead moved to Completion.", "success")
+    return redirect(request.referrer or url_for("admin_dashboard"))
+
+
+@app.route('/admin/lead/<int:lead_id>/prepare-payment', methods=['POST'])
+@admin_required
+def admin_lead_prepare_payment(lead_id):
+    conn = get_db()
+    conn.execute(
+        "UPDATE leads SET status = 'prepare_to_be_paid' WHERE id = ? AND status = 'completion'",
+        (lead_id,),
+    )
+    conn.commit()
+    conn.close()
+    flash("Lead moved to Prepare to be Paid.", "success")
+    return redirect(request.referrer or url_for("admin_dashboard"))
+
+
+@app.route('/admin/lead/<int:lead_id>/paid', methods=['POST'])
+@admin_required
+def admin_lead_paid(lead_id):
+    raw = request.form.get("paid_amount", "").strip()
+    try:
+        paid = float(raw)
+    except ValueError:
+        flash("Paid amount must be a number.", "error")
+        return redirect(request.referrer or url_for("admin_dashboard"))
+
+    if paid <= 0:
+        flash("Paid amount must be greater than zero.", "error")
+        return redirect(request.referrer or url_for("admin_dashboard"))
+
+    conn = get_db()
+    lead = _load_lead_with_agent(conn, lead_id)
+
+    if not lead:
+        conn.close()
+        flash("Lead not found.", "error")
+        return redirect(url_for("admin_dashboard"))
+
+    if lead["status"] != "prepare_to_be_paid":
+        conn.close()
+        flash("Lead must be in 'prepare to be paid' state.", "error")
+        return redirect(request.referrer or url_for("admin_dashboard"))
+
+    conn.execute(
+        "UPDATE leads SET status = 'paid', paid_amount = ? WHERE id = ?",
+        (paid, lead_id),
+    )
+    conn.commit()
+    conn.close()
+
+    sent = send_paid_email(
+        lead["agent_name"], lead["agent_email"], lead["name"], paid
+    )
+    if sent:
+        flash(f"Marked as Paid. Email sent to {lead['agent_name']}.", "success")
+    else:
+        flash("Marked as Paid. Email could not be sent.", "error")
+    return redirect(request.referrer or url_for("admin_dashboard"))
 
 
 # ============================================================
 # CONTACT / SEO
 # ============================================================
 
-@app.route('/contact',methods=['GET','POST'])
+@app.route('/contact', methods=['GET', 'POST'])
 def contact():
-    if request.method=='POST':
-        sent=send_contact_email(request.form)
-        flash('Your message has been sent. We\'ll get back to you soon.' if sent else f'Something went wrong. Please email {MAIL_RECIPIENT} directly.', 'success' if sent else 'error')
+    if request.method == 'POST':
+        sent = send_contact_email(request.form)
+        flash(
+            'Your message has been sent. We\'ll get back to you soon.'
+            if sent else
+            f'Something went wrong. Please email {MAIL_RECIPIENT} directly.',
+            'success' if sent else 'error',
+        )
         return redirect(url_for('contact'))
     return render_template('contact.html')
 
@@ -976,23 +1303,31 @@ def contact():
 @app.route('/sitemap.xml')
 def sitemap():
     now = datetime.utcnow().date().isoformat()
-    pages=[]
+    pages = []
+
     def add(endpoint, **kwargs):
-        pages.append({'url':url_for(endpoint,_external=True,**kwargs),'lastmod':now,'changefreq':'weekly','priority':'0.7'})
-    for endpoint in ['home','about','vision','services','work','contact','insights']:
-        add(endpoint); pages[-1]['priority']='0.9' if endpoint in ('home','services') else '0.7'
-    for s in SERVICES: add('service_detail',slug=s['slug']); pages[-1]['priority']='0.9'
-    for r in REGIONS: add('region_detail',slug=r['slug']); pages[-1]['priority']='0.8'
-    for i in INDUSTRIES: add('industry_detail',slug=i['slug']); pages[-1]['priority']='0.8'
-    for a in ARTICLES: add('article_detail',slug=a['slug']); pages[-1]['priority']='0.8'
-    for p in PROJECTS: add('project_detail',slug=p['id']); pages[-1]['priority']='0.7'
-    return render_template('sitemap.xml',pages=pages), {'Content-Type':'application/xml'}
+        pages.append({
+            'url': url_for(endpoint, _external=True, **kwargs),
+            'lastmod': now,
+            'changefreq': 'weekly',
+            'priority': '0.7',
+        })
+
+    for endpoint in ['home', 'about', 'vision', 'services', 'work', 'contact', 'insights']:
+        add(endpoint)
+        pages[-1]['priority'] = '0.9' if endpoint in ('home', 'services') else '0.7'
+    for s in SERVICES: add('service_detail', slug=s['slug']); pages[-1]['priority'] = '0.9'
+    for r in REGIONS: add('region_detail', slug=r['slug']); pages[-1]['priority'] = '0.8'
+    for i in INDUSTRIES: add('industry_detail', slug=i['slug']); pages[-1]['priority'] = '0.8'
+    for a in ARTICLES: add('article_detail', slug=a['slug']); pages[-1]['priority'] = '0.8'
+    for p in PROJECTS: add('project_detail', slug=p['id']); pages[-1]['priority'] = '0.7'
+    return render_template('sitemap.xml', pages=pages), {'Content-Type': 'application/xml'}
 
 
 @app.route('/robots.txt')
 def robots():
-    return render_template('robots.txt'), {'Content-Type':'text/plain'}
+    return render_template('robots.txt'), {'Content-Type': 'text/plain'}
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

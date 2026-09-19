@@ -6,18 +6,15 @@
 {% block content %}
 
 <section class="agent-dashboard">
-
     <div class="dashboard-shell">
 
         <div class="dashboard-top">
             <div>
                 <p class="eyebrow">ENTRIX II / ADMIN</p>
                 <h1>Welcome, {{ session.admin_name }}</h1>
-                <p class="lead">Review agents and their submitted leads.</p>
+                <p class="lead">Review agents, set prices and progress projects.</p>
             </div>
-            <a href="{{ url_for('admin_logout') }}" class="btn btn-ghost">
-                Logout
-            </a>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-ghost">Logout</a>
         </div>
 
 
@@ -30,51 +27,22 @@
         {% endwith %}
 
 
-        <!-- ============ STATS ============ -->
         <div class="dashboard-stats" style="grid-template-columns:repeat(4,1fr);">
-
-            <div class="dashboard-card">
-                <span class="dashboard-label">TOTAL AGENTS</span>
-                <strong>{{ stats.total_agents }}</strong>
-            </div>
-
-            <div class="dashboard-card">
-                <span class="dashboard-label">PENDING AGENTS</span>
-                <strong>{{ stats.pending_agents }}</strong>
-            </div>
-
-            <div class="dashboard-card">
-                <span class="dashboard-label">TOTAL LEADS</span>
-                <strong>{{ stats.total_leads }}</strong>
-            </div>
-
-            <div class="dashboard-card">
-                <span class="dashboard-label">PENDING LEADS</span>
-                <strong>{{ stats.pending_leads }}</strong>
-            </div>
-
-            <div class="dashboard-card">
-                <span class="dashboard-label">BUILDING</span>
-                <strong style="color:#fb923c;">{{ stats.building_leads }}</strong>
-            </div>
-
-            <div class="dashboard-card">
-                <span class="dashboard-label">AWAITING PAYMENT</span>
-                <strong style="color:#22d3ee;">{{ stats.awaiting_payment }}</strong>
-            </div>
-
-            <div class="dashboard-card">
-                <span class="dashboard-label">SUCCESSFUL</span>
-                <strong style="color:#4ade80;">{{ stats.successful_leads }}</strong>
-            </div>
-
+            <div class="dashboard-card"><span class="dashboard-label">AGENTS</span><strong>{{ stats.total_agents }}</strong></div>
+            <div class="dashboard-card"><span class="dashboard-label">PENDING AGENTS</span><strong>{{ stats.pending_agents }}</strong></div>
+            <div class="dashboard-card"><span class="dashboard-label">TOTAL LEADS</span><strong>{{ stats.total_leads }}</strong></div>
+            <div class="dashboard-card"><span class="dashboard-label">PENDING LEADS</span><strong>{{ stats.pending_leads }}</strong></div>
+            <div class="dashboard-card"><span class="dashboard-label">ACCEPTED</span><strong style="color:#fbbf24;">{{ stats.accepted_leads }}</strong></div>
+            <div class="dashboard-card"><span class="dashboard-label">BUILDING</span><strong style="color:#fb923c;">{{ stats.building_leads }}</strong></div>
+            <div class="dashboard-card"><span class="dashboard-label">COMPLETION</span><strong style="color:#fb923c;">{{ stats.completion_leads }}</strong></div>
+            <div class="dashboard-card"><span class="dashboard-label">PREPARE PAY</span><strong style="color:#22d3ee;">{{ stats.prepare_leads }}</strong></div>
+            <div class="dashboard-card"><span class="dashboard-label">AWAITING CONFIRM</span><strong style="color:#22d3ee;">{{ stats.awaiting_confirm }}</strong></div>
+            <div class="dashboard-card"><span class="dashboard-label">SUCCESSFUL</span><strong style="color:#4ade80;">{{ stats.successful_leads }}</strong></div>
         </div>
 
 
-        <!-- ================= AGENTS ================= -->
-
-        <div class="dashboard-section" style="margin-bottom:32px;">
-
+        <!-- AGENTS -->
+        <div class="dashboard-section" style="margin-top:32px;margin-bottom:32px;">
             <div class="dashboard-section-header">
                 <div>
                     <p class="eyebrow">AGENTS</p>
@@ -121,9 +89,7 @@
                                         <button type="submit" class="btn-sm">Reject</button>
                                     </form>
                                     {% endif %}
-                                    <a href="{{ url_for('admin_view_agent', agent_id=agent.id) }}" class="btn-sm">
-                                        View Agent
-                                    </a>
+                                    <a href="{{ url_for('admin_view_agent', agent_id=agent.id) }}" class="btn-sm">View Agent</a>
                                     <form method="POST" action="{{ url_for('admin_delete_agent', agent_id=agent.id) }}"
                                           onsubmit="return confirm('Delete this agent and all their leads?');">
                                         <button type="submit" class="btn-sm">Delete</button>
@@ -138,14 +104,11 @@
             {% else %}
             <p style="color:var(--ink-dim);">No agents registered yet.</p>
             {% endif %}
-
         </div>
 
 
-        <!-- ================= LEADS ================= -->
-
+        <!-- LEADS -->
         <div class="dashboard-section">
-
             <div class="dashboard-section-header">
                 <div>
                     <p class="eyebrow">LEAD TRACKER</p>
@@ -159,9 +122,8 @@
                     <thead>
                         <tr style="text-align:left;border-bottom:1px solid var(--line);">
                             <th style="padding:12px 8px;">Lead</th>
-                            <th style="padding:12px 8px;">Contact</th>
-                            <th style="padding:12px 8px;">Service</th>
                             <th style="padding:12px 8px;">Agent</th>
+                            <th style="padding:12px 8px;">Budget / Agreed</th>
                             <th style="padding:12px 8px;">Status</th>
                             <th style="padding:12px 8px;">Actions</th>
                         </tr>
@@ -171,64 +133,83 @@
                         <tr style="border-bottom:1px solid var(--line);">
                             <td style="padding:12px 8px;">
                                 <strong>{{ lead.name }}</strong>
-                                {% if lead.company %}
-                                    <br><small style="color:var(--ink-faint);">{{ lead.company }}</small>
-                                {% endif %}
-                                {% if lead.notes %}
-                                    <br><small style="color:var(--ink-dim);">{{ lead.notes }}</small>
-                                {% endif %}
+                                {% if lead.company %}<br><small style="color:var(--ink-faint);">{{ lead.company }}</small>{% endif %}
+                                {% if lead.service %}<br><small style="color:var(--ink-dim);">{{ lead.service }}</small>{% endif %}
+                                {% if lead.notes %}<br><small style="color:var(--ink-faint);font-family:'Space Mono',monospace;">{{ lead.notes }}</small>{% endif %}
                             </td>
                             <td style="padding:12px 8px;color:var(--ink-dim);">
-                                {% if lead.email %}{{ lead.email }}<br>{% endif %}
-                                {% if lead.phone %}{{ lead.phone }}{% endif %}
-                            </td>
-                            <td style="padding:12px 8px;">{{ lead.service or '—' }}</td>
-                            <td style="padding:12px 8px;color:var(--ink-dim);">
-                                {{ lead.agent_name }}<br>
-                                <small>{{ lead.agent_email }}</small>
+                                {{ lead.agent_name }}<br><small>{{ lead.agent_email }}</small>
                             </td>
                             <td style="padding:12px 8px;">
-                                {% if lead.status == 'pending' %}
-                                    <span style="color:var(--ink-faint);">Pending</span>
-                                {% elif lead.status == 'rejected' %}
-                                    <span style="color:#ff6b6b;">Rejected</span>
-                                {% elif lead.status == 'approved' %}
-                                    <span style="color:var(--blue-glow);">Approved</span>
-                                {% elif lead.status == 'contacted' %}
-                                    <span style="color:#fbbf24;">Contacted</span>
-                                {% elif lead.status == 'talking' %}
-                                    <span style="color:#fbbf24;">Talking</span>
-                                {% elif lead.status == 'negotiating' %}
-                                    <span style="color:#fb923c;">Negotiating</span>
-                                {% elif lead.status == 'project_confirmed' %}
-                                    <span style="color:#fb923c;font-weight:600;">Project Confirmed</span>
-                                {% elif lead.status == 'building' %}
-                                    <span style="color:#fb923c;font-weight:600;">Building</span>
-                                {% elif lead.status == 'payment_received' %}
-                                    <span style="color:#22d3ee;font-weight:600;">Payment Received</span>
-                                {% elif lead.status == 'commission_received' %}
-                                    <span style="color:#4ade80;font-weight:600;">Commission Received</span>
-                                {% elif lead.status == 'successful' %}
-                                    <span style="color:#4ade80;font-weight:700;">Successful</span>
-                                {% elif lead.status == 'lost' %}
-                                    <span style="color:#ff6b6b;">Lost</span>
-                                {% else %}
-                                    <span style="color:var(--ink-dim);">{{ lead.status }}</span>
+                                {% if lead.budget %}
+                                    <div style="color:var(--ink-faint);font-size:12px;">Budget: {{ lead.budget | naira }}</div>
+                                {% endif %}
+                                {% if lead.agreed_price %}
+                                    <div style="color:var(--ink);">Agreed: {{ lead.agreed_price | naira }}</div>
+                                    <div style="color:#4ade80;font-family:'Space Mono',monospace;font-size:11px;">Comm: {{ lead.agreed_price | commission_of | naira }}</div>
+                                {% endif %}
+                                {% if lead.paid_amount %}
+                                    <div style="color:#4ade80;font-family:'Space Mono',monospace;font-size:11px;">Paid: {{ lead.paid_amount | naira }}</div>
                                 {% endif %}
                             </td>
                             <td style="padding:12px 8px;">
-                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                {% if lead.status == 'pending' %}<span style="color:var(--ink-faint);">Pending</span>
+                                {% elif lead.status == 'rejected' %}<span style="color:#ff6b6b;">Rejected</span>
+                                {% elif lead.status == 'approved' %}<span style="color:var(--blue-glow);">Approved</span>
+                                {% elif lead.status == 'accepted' %}<span style="color:#fbbf24;">Accepted</span>
+                                {% elif lead.status == 'building' %}<span style="color:#fb923c;font-weight:600;">Building</span>
+                                {% elif lead.status == 'completion' %}<span style="color:#fb923c;font-weight:600;">Completion</span>
+                                {% elif lead.status == 'prepare_to_be_paid' %}<span style="color:#22d3ee;font-weight:600;">Prepare Payment</span>
+                                {% elif lead.status == 'paid' %}<span style="color:#22d3ee;font-weight:700;">💰 Paid</span>
+                                {% elif lead.status == 'paid_confirmed' %}<span style="color:#4ade80;font-weight:700;">✓ Confirmed</span>
+                                {% elif lead.status == 'lost' %}<span style="color:#ff6b6b;">Lost</span>
+                                {% else %}<span style="color:var(--ink-dim);">{{ lead.status }}</span>{% endif %}
+                            </td>
+                            <td style="padding:12px 8px;">
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
                                     {% if lead.status == 'pending' %}
-                                    <form method="POST" action="{{ url_for('admin_approve_lead', lead_id=lead.id) }}">
-                                        <button type="submit" class="btn-sm primary">Approve</button>
-                                    </form>
-                                    <form method="POST" action="{{ url_for('admin_reject_lead', lead_id=lead.id) }}">
-                                        <button type="submit" class="btn-sm">Reject</button>
-                                    </form>
+                                        <form method="POST" action="{{ url_for('admin_approve_lead', lead_id=lead.id) }}">
+                                            <button type="submit" class="btn-sm primary">Approve</button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('admin_reject_lead', lead_id=lead.id) }}">
+                                            <button type="submit" class="btn-sm">Reject</button>
+                                        </form>
+
+                                    {% elif lead.status == 'accepted' and not lead.agreed_price %}
+                                        <form method="POST" action="{{ url_for('admin_set_agreed_price', lead_id=lead.id) }}" style="display:flex;gap:6px;align-items:center;">
+                                            <input type="number" step="0.01" name="agreed_price" placeholder="₦" required style="width:120px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:6px 8px;color:var(--ink);font-size:12px;">
+                                            <button type="submit" class="btn-sm primary">Set Price</button>
+                                        </form>
+
+                                    {% elif lead.status == 'accepted' %}
+                                        <form method="POST" action="{{ url_for('admin_lead_building', lead_id=lead.id) }}">
+                                            <button type="submit" class="btn-sm primary">Start Building</button>
+                                        </form>
+
+                                    {% elif lead.status == 'building' %}
+                                        <form method="POST" action="{{ url_for('admin_lead_completion', lead_id=lead.id) }}">
+                                            <button type="submit" class="btn-sm primary">Completion</button>
+                                        </form>
+
+                                    {% elif lead.status == 'completion' %}
+                                        <form method="POST" action="{{ url_for('admin_lead_prepare_payment', lead_id=lead.id) }}">
+                                            <button type="submit" class="btn-sm primary">Prepare Payment</button>
+                                        </form>
+
+                                    {% elif lead.status == 'prepare_to_be_paid' %}
+                                        <form method="POST" action="{{ url_for('admin_lead_paid', lead_id=lead.id) }}" style="display:flex;gap:6px;align-items:center;">
+                                            <input type="number" step="0.01" name="paid_amount" placeholder="₦" required style="width:120px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:6px 8px;color:var(--ink);font-size:12px;">
+                                            <button type="submit" class="btn-sm primary">Mark Paid</button>
+                                        </form>
+
+                                    {% elif lead.status == 'paid' %}
+                                        <small style="color:#22d3ee;font-family:'Space Mono',monospace;font-size:11px;">Awaiting agent confirmation</small>
+
+                                    {% elif lead.status == 'paid_confirmed' %}
+                                        <small style="color:#4ade80;font-family:'Space Mono',monospace;font-size:11px;">✓ Agent confirmed</small>
+
                                     {% else %}
-                                    <small style="color:var(--ink-faint);font-family:'Space Mono',monospace;font-size:11px;">
-                                        Managed by agent
-                                    </small>
+                                        <small style="color:var(--ink-faint);font-family:'Space Mono',monospace;font-size:11px;">—</small>
                                     {% endif %}
                                 </div>
                             </td>
@@ -241,22 +222,17 @@
             <div class="empty-state">
                 <div class="empty-state-icon">+</div>
                 <h3>No leads yet</h3>
-                <p>Leads submitted by agents will appear here for review.</p>
+                <p>Leads submitted by agents will appear here.</p>
             </div>
             {% endif %}
-
         </div>
 
     </div>
-
 </section>
 
 <style>
     @media (max-width: 900px){
         .dashboard-stats{ grid-template-columns: repeat(2, 1fr) !important; }
-    }
-    @media (max-width: 520px){
-        .dashboard-stats{ grid-template-columns: 1fr !important; }
     }
 </style>
 
