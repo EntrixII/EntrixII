@@ -7,7 +7,7 @@
 
 <section class="page-hero" style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:140px 24px 80px;">
 
-    <div class="section-shell" style="width:min(520px,100%;)">
+    <div class="section-shell" style="width:min(520px,100%);">
 
         <p class="eyebrow">ENTRIX II / ADMIN</p>
 
@@ -28,7 +28,7 @@
         <form
             method="POST"
             action="{{ url_for('admin_login') }}"
-            autocomplete="off"
+            autocomplete="on"
             style="margin-top:28px;display:grid;gap:16px;"
         >
 
@@ -38,9 +38,10 @@
                     type="email"
                     name="email"
                     placeholder="admin@entrix.local"
-                    autocomplete="off"
-                    readonly
-                    onfocus="this.removeAttribute('readonly');"
+                    autocomplete="username"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
                     required
                 >
             </label>
@@ -51,18 +52,24 @@
                     type="password"
                     name="password"
                     placeholder="••••••••"
-                    autocomplete="new-password"
-                    readonly
-                    onfocus="this.removeAttribute('readonly');"
+                    autocomplete="current-password"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
                     required
                 >
             </label>
 
-            <button type="submit" class="nav-cta">
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
                 Login
             </button>
 
         </form>
+
+        <p style="margin-top:18px;color:var(--ink-dim);font-size:13px;line-height:1.6;">
+            Tip: after your first successful login, your browser will offer to
+            save these credentials so you don't have to type them again.
+        </p>
 
     </div>
 

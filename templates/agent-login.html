@@ -28,57 +28,47 @@
         <form
             method="POST"
             action="{{ url_for('agent_login') }}"
-            autocomplete="off"
+            autocomplete="on"
             style="margin-top:28px;display:grid;gap:16px;"
         >
 
             <label>
                 Email
-
                 <input
                     type="email"
                     name="email"
                     placeholder="agent@example.com"
-                    autocomplete="off"
+                    autocomplete="username"
                     autocorrect="off"
                     autocapitalize="off"
                     spellcheck="false"
-                    readonly
-                    onfocus="this.removeAttribute('readonly');"
                     required
                 >
             </label>
 
-
             <label>
                 Password
-
                 <input
                     type="password"
                     name="password"
                     placeholder="••••••••"
-                    autocomplete="new-password"
+                    autocomplete="current-password"
                     autocorrect="off"
                     autocapitalize="off"
                     spellcheck="false"
-                    readonly
-                    onfocus="this.removeAttribute('readonly');"
                     required
                 >
             </label>
 
-
-            <button type="submit" class="nav-cta">
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
                 Login
             </button>
 
         </form>
 
-
         <p style="margin-top:18px;color:var(--ink-dim);font-size:14px;">
             Authorized agents only. Your session is protected after login.
         </p>
-
 
         <p style="margin-top:18px;color:var(--ink-dim);font-size:14px;">
             Don't have an account?
