@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ENTRIX II — main.js (Stage 2)
+   ENTRIX II — main.js
    - Loading sequence orchestration (first-visit vs. returning-visit timing)
    - Navigation (scroll state, mobile menu)
    - 3D hero scene (lazy-loaded, reduced-motion aware)
@@ -65,20 +65,52 @@
     onScroll();
 
     if (toggle && mobileNav) {
+      const openMenu = () => {
+        toggle.setAttribute("aria-expanded", "true");
+        mobileNav.classList.add("open");
+        document.body.classList.add("mobile-menu-open");
+      };
+
+      const closeMenu = () => {
+        toggle.setAttribute("aria-expanded", "false");
+        mobileNav.classList.remove("open");
+        document.body.classList.remove("mobile-menu-open");
+      };
+
       toggle.addEventListener("click", () => {
-        const open = toggle.getAttribute("aria-expanded") === "true";
-        toggle.setAttribute("aria-expanded", String(!open));
-        mobileNav.classList.toggle("open", !open);
-        document.body.style.overflow = open ? "" : "hidden";
+        const isOpen = toggle.getAttribute("aria-expanded") === "true";
+        if (isOpen) {
+          closeMenu();
+        } else {
+          openMenu();
+        }
       });
 
+      // Close the menu when any link inside it is tapped
       mobileNav.querySelectorAll("a").forEach((link) => {
         link.addEventListener("click", () => {
-          toggle.setAttribute("aria-expanded", "false");
-          mobileNav.classList.remove("open");
-          document.body.style.overflow = "";
+          closeMenu();
         });
       });
+
+      // Close the menu when ESC is pressed
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && mobileNav.classList.contains("open")) {
+          closeMenu();
+        }
+      });
+
+      // Close the menu if the viewport widens past the mobile breakpoint
+      // (e.g. user rotates phone to landscape or resizes browser)
+      const mq = window.matchMedia("(min-width: 861px)");
+      const handleWide = (e) => {
+        if (e.matches) closeMenu();
+      };
+      if (mq.addEventListener) {
+        mq.addEventListener("change", handleWide);
+      } else if (mq.addListener) {
+        mq.addListener(handleWide);
+      }
     }
   }
 
