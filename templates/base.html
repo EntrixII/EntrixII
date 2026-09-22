@@ -10,222 +10,165 @@
         content="width=device-width, initial-scale=1, viewport-fit=cover"
     >
 
-    <title>
-        {% block title %}
-        Entrix II — Web Development & Digital Solutions in Nigeria
-        {% endblock %}
-    </title>
+    {%- set page_title = self.title()|squish %}
+    {%- set page_description = self.description()|squish %}
+    {%- set default_share_image = url_for('static', filename='images/og-default.jpg', _external=True) %}
+    {%- set share_image = og_image|default(default_share_image, true) %}
 
-    <meta
-        name="description"
-        content="{% block description %}
-        Entrix II builds websites, web applications, e-commerce platforms,
-        custom software, SEO systems and digital products for businesses in
-        Nigeria and across Africa.
-        {% endblock %}"
-    >
+    <title>{{ page_title }}</title>
 
-    <meta
-        name="robots"
-        content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
-    >
+    <meta name="description" content="{{ page_description }}">
 
-    <link
-        rel="canonical"
-        href="{{ site.url }}{{ request.path|replace('//', '/') }}"
-    >
+    {% if noindex %}
+    <meta name="robots" content="noindex,nofollow">
+    {% else %}
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+    {% endif %}
 
-    <link
-        rel="alternate"
-        hreflang="en-ng"
-        href="{{ site.url }}{{ request.path|replace('//', '/') }}"
-    >
+    <link rel="canonical" href="{{ canonical_url }}">
 
-    <link
-        rel="alternate"
-        hreflang="en"
-        href="{{ site.url }}{{ request.path|replace('//', '/') }}"
-    >
-
-    <link
-        rel="alternate"
-        hreflang="x-default"
-        href="{{ site.url }}{{ request.path|replace('//', '/') }}"
-    >
-
-    <link
-        rel="sitemap"
-        type="application/xml"
-        title="Sitemap"
-        href="{{ url_for('sitemap') }}"
-    >
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ url_for('sitemap') }}">
 
 
     <!-- Open Graph -->
 
-    <meta property="og:type" content="website">
-
-    <meta
-        property="og:site_name"
-        content="{{ site.name }}"
-    >
-
-    <meta
-        property="og:title"
-        content="{% block og_title %}{{ self.title() }}{% endblock %}"
-    >
-
-    <meta
-        property="og:description"
-        content="{% block og_description %}{{ self.description() }}{% endblock %}"
-    >
-
-    <meta
-        property="og:url"
-        content="{{ site.url }}{{ request.path }}"
-    >
-
-    <meta
-        property="og:image"
-        content="{{ url_for(
-            'static',
-            filename='images/entrix-ii-logo.jpeg',
-            _external=True
-        ) }}"
-    >
+    <meta property="og:locale" content="en_NG">
+    <meta property="og:type" content="{{ og_type|default('website') }}">
+    <meta property="og:site_name" content="{{ site.name }}">
+    <meta property="og:title" content="{% block og_title %}{{ page_title }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ page_description }}{% endblock %}">
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta property="og:image" content="{{ share_image }}">
+    {% if not og_image %}
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    {% endif %}
+    <meta property="og:image:alt" content="{{ page_title }}">
 
 
-    <!-- Twitter -->
+    <!-- Twitter / X -->
 
-    <meta
-        name="twitter:card"
-        content="summary_large_image"
-    >
-
-    <meta
-        name="twitter:title"
-        content="{{ self.title() }}"
-    >
-
-    <meta
-        name="twitter:description"
-        content="{{ self.description() }}"
-    >
-
-    <meta
-        name="twitter:image"
-        content="{{ url_for(
-            'static',
-            filename='images/entrix-ii-logo.jpeg',
-            _external=True
-        ) }}"
-    >
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ page_title }}">
+    <meta name="twitter:description" content="{{ page_description }}">
+    <meta name="twitter:image" content="{{ share_image }}">
 
 
     <!-- Site Settings -->
 
-    <meta
-        name="theme-color"
-        content="#05060a"
-    >
+    <meta name="theme-color" content="#05060a">
+    <meta name="format-detection" content="telephone=no">
+
+    <link rel="icon" href="{{ url_for('favicon') }}" sizes="any">
+    <link rel="icon" type="image/png" sizes="48x48" href="{{ url_for('static', filename='images/favicon-48.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('webmanifest') }}">
+
+
+    <!-- Google Fonts (non-render-blocking) -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link
-        rel="icon"
-        href="{{ url_for(
-            'static',
-            filename='images/entrix-ii-logo.jpeg'
-        ) }}"
-    >
-
-
-    <!-- Google Fonts -->
-
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin
-    >
-
-    <link
+        rel="preload"
+        as="style"
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap"
-        rel="stylesheet"
+        onload="this.onload=null;this.rel='stylesheet'"
     >
+
+    <noscript>
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap"
+        >
+        <style>#loader{display:none !important}</style>
+    </noscript>
 
 
     <!-- Main CSS -->
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for(
-            'static',
-            filename='css/style.css'
-        ) }}"
-    >
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
 
     {% block head %}
     {% endblock %}
 
 
-    <!-- Organization Schema -->
+    <!-- Structured data: Organization + WebSite (one connected graph) -->
+
+    {%- set org_id = site.url ~ '/#organization' %}
 
     <script type="application/ld+json">
-
         {{
             {
                 '@context': 'https://schema.org',
-                '@type': 'Organization',
-                'name': site.name,
-                'url': site.url,
-                'logo': url_for(
-                    'static',
-                    filename='images/entrix-ii-logo.jpeg',
-                    _external=True
-                ),
-                'sameAs': [
-                    social.github,
-                    social.twitter,
-                    social.linkedin,
-                    social.instagram
-                ],
-                'contactPoint': {
-                    '@type': 'ContactPoint',
-                    'email': social.email,
-                    'contactType': 'sales',
-                    'areaServed': [
-                        'NG',
-                        'Africa'
-                    ],
-                    'availableLanguage': [
-                        'English'
-                    ]
-                }
+                '@graph': [
+                    {
+                        '@type': 'Organization',
+                        '@id': org_id,
+                        'name': site.name,
+                        'alternateName': ['Entrix', 'EntrixII'],
+                        'url': site.url,
+                        'description': site.description,
+                        'logo': {
+                            '@type': 'ImageObject',
+                            'url': url_for('static', filename='images/icon-512.png', _external=True),
+                            'width': 512,
+                            'height': 512
+                        },
+                        'image': default_share_image,
+                        'email': social.email,
+                        'telephone': support_phone,
+                        'address': {
+                            '@type': 'PostalAddress',
+                            'addressCountry': 'NG'
+                        },
+                        'areaServed': [
+                            {'@type': 'Country', 'name': 'Nigeria'},
+                            {'@type': 'Continent', 'name': 'Africa'}
+                        ],
+                        'knowsAbout': [
+                            'Web development',
+                            'Website design',
+                            'E-commerce development',
+                            'Web applications',
+                            'Custom software development',
+                            'Search engine optimization',
+                            'API and payment integration'
+                        ],
+                        'sameAs': [
+                            social.github,
+                            social.twitter,
+                            social.linkedin,
+                            social.instagram
+                        ],
+                        'contactPoint': {
+                            '@type': 'ContactPoint',
+                            'email': social.email,
+                            'telephone': support_phone,
+                            'contactType': 'sales',
+                            'areaServed': ['NG'],
+                            'availableLanguage': ['English']
+                        }
+                    },
+                    {
+                        '@type': 'WebSite',
+                        '@id': site.url ~ '/#website',
+                        'url': site.url,
+                        'name': site.name,
+                        'inLanguage': 'en-NG',
+                        'publisher': {'@id': org_id}
+                    }
+                ]
             } | tojson
         }}
-
     </script>
 
-
-    <!-- Website Schema -->
-
-    <script type="application/ld+json">
-
-        {{
-            {
-                '@context': 'https://schema.org',
-                '@type': 'WebSite',
-                'name': site.name,
-                'url': site.url,
-                'inLanguage': 'en-NG'
-            } | tojson
-        }}
-
-    </script>
+    {% if breadcrumbs %}
+    <script type="application/ld+json">{{ breadcrumb_schema(breadcrumbs.trail) | tojson }}</script>
+    {% endif %}
 
 
     {% block schema %}
@@ -487,6 +430,17 @@
     <main id="main">
 
         {% block breadcrumbs %}
+        {% if breadcrumbs and breadcrumbs.visible %}
+        <nav class="breadcrumbs container" aria-label="Breadcrumb">
+            {% for crumb in breadcrumbs.trail %}
+                {% if loop.last %}
+                <span aria-current="page">{{ crumb.name }}</span>
+                {% else %}
+                <a href="{{ crumb.url }}">{{ crumb.name }}</a><span aria-hidden="true">›</span>
+                {% endif %}
+            {% endfor %}
+        </nav>
+        {% endif %}
         {% endblock %}
 
         {% block content %}
@@ -538,6 +492,60 @@
                 </a>
 
             </div>
+
+
+            <!-- Footer site map (sitewide internal links to every key page) -->
+
+            <nav class="footer-sitemap" aria-label="Site map">
+
+                <div>
+                    <h2>Services</h2>
+                    <ul>
+                        {% for s in services %}
+                        <li><a href="{{ url_for('service_detail', slug=s.slug) }}">{{ s.title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div>
+                    <h2>Where we work</h2>
+                    <ul>
+                        {% for r in regions %}
+                        <li><a href="{{ url_for('region_detail', slug=r.slug) }}">Web development in {{ r.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div>
+                    <h2>Industries</h2>
+                    <ul>
+                        {% for i in industries %}
+                        <li><a href="{{ url_for('industry_detail', slug=i.slug) }}">{{ i.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div>
+                    <h2>Guides</h2>
+                    <ul>
+                        {% for a in articles %}
+                        <li><a href="{{ url_for('article_detail', slug=a.slug) }}">{{ a.title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div>
+                    <h2>Company</h2>
+                    <ul>
+                        <li><a href="{{ url_for('about') }}">About</a></li>
+                        <li><a href="{{ url_for('work') }}">Work</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                        <li><a href="{{ url_for('become_agent') }}">Become an Agent</a></li>
+                        <li><a href="{{ url_for('vision') }}">Vision</a></li>
+                    </ul>
+                </div>
+
+            </nav>
 
 
             <!-- Social Links -->

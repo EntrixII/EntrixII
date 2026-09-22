@@ -1,15 +1,32 @@
 {% extends "base.html" %}
 
-{% block title %}Contact a Web Developer in Nigeria | Entrix II{% endblock %}
+{% block title %}Contact Entrix II — Web Developers in Nigeria{% endblock %}
 {% block description %}Contact Entrix II for web development, software, e-commerce, SEO, automation and digital product projects in Nigeria and across Africa.{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">{{ {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  'name': 'Contact Entrix II',
+  'url': site.url ~ '/contact',
+  'inLanguage': 'en-NG',
+  'isPartOf': {'@id': site.url ~ '/#website'},
+  'about': {'@id': site.url ~ '/#organization'}
+} | tojson }}</script>
+{% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <h1>Contact</h1>
-  <p>Let's build something great together.</p>
+  <h1>Contact Entrix II</h1>
+  <p>Tell us about your website, web application, e-commerce or software project and we will reply with next steps.</p>
 </div>
 
 <div class="contact-section">
+  <ul class="contact-details">
+    <li><strong>Email:</strong> <a href="mailto:{{ social.email }}">{{ social.email }}</a></li>
+    <li><strong>Phone / WhatsApp:</strong> <a href="tel:{{ support_phone }}">{{ support_phone }}</a> · <a href="{{ social.whatsapp }}" target="_blank" rel="noopener noreferrer">Chat on WhatsApp</a></li>
+    <li><strong>Serving:</strong> Nigeria and across Africa (remote delivery)</li>
+  </ul>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}

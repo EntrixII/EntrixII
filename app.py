@@ -10,6 +10,12 @@ import smtplib
 from email.message import EmailMessage
 from datetime import datetime
 from dotenv import load_dotenv
+import re
+import json
+from urllib.parse import urlparse
+from markupsafe import Markup
+
+from seo_content import NEW_ARTICLES
 
 load_dotenv()
 
@@ -230,6 +236,9 @@ SITE = {
     'name': 'Entrix II',
     'url': 'https://entrixii.com.ng',
     'tagline': "building what's next",
+    'description': ('Entrix II is a developer-led digital studio building websites, web applications, '
+                    'e-commerce platforms, custom software and SEO systems for businesses in Nigeria '
+                    'and across Africa.'),
 }
 
 SOCIAL = {
@@ -287,12 +296,46 @@ ARTICLES = [
 ]
 
 PROJECTS = [
-    {'id':'jecyani-properties','title':'Jecyani Properties','category':'Real Estate','url':'https://jecyaniproperties.com/','live':True,'description':'A modern real estate platform showcasing properties with a sleek, trust-driven interface. Built for speed and conversion.','image':'jacyani.jpg','technologies':['Flask','Tailwind CSS','JavaScript','PostgreSQL'],'challenge':'The client needed a digital presence that reflected their premium property portfolio while being easy to manage.','solution':'We built a custom CMS with property listings, advanced search, and a streamlined contact system.'},
-    {'id':'crownbee-global','title':'Crownbee Global Services','category':'Real Estate','url':'https://crownbeeglobalservices.com/','live':True,'description':'A corporate website for international real estate services, emphasizing trust and global reach.','image':'crownbee.jpg','technologies':['React','Node.js','MongoDB','AWS'],'challenge':'Showcasing a diverse portfolio across multiple countries with a unified brand voice.','solution':'A multi-language site with dynamic content blocks and a powerful backend.'},
+    {'id':'jecyani-properties','title':'Jecyani Properties','category':'Real Estate','url':'https://jecyaniproperties.com/','live':True,'description':'A modern real estate platform showcasing properties with a sleek, trust-driven interface. Built for speed and conversion.','image':'jacyani.webp','technologies':['Flask','Tailwind CSS','JavaScript','PostgreSQL'],'challenge':'The client needed a digital presence that reflected their premium property portfolio while being easy to manage.','solution':'We built a custom CMS with property listings, advanced search, and a streamlined contact system.'},
+    {'id':'crownbee-global','title':'Crownbee Global Services','category':'Real Estate','url':'https://crownbeeglobalservices.com/','live':True,'description':'A corporate website for international real estate services, emphasizing trust and global reach.','image':'crownbee.webp','technologies':['React','Node.js','MongoDB','AWS'],'challenge':'Showcasing a diverse portfolio across multiple countries with a unified brand voice.','solution':'A multi-language site with dynamic content blocks and a powerful backend.'},
     {'id':'verrazzano','title':'Verrazzano','category':'Furniture','url':None,'live':False,'description':'A high-end furniture brand concept. This case study explores e-commerce and immersive product presentation.','image':'image.WebP','technologies':['Next.js','Three.js','Stripe','GraphQL'],'challenge':'Creating a digital showroom that feels as luxurious as the physical products.','solution':'A 3D product viewer with AR preview, integrated with a headless CMS for inventory.'},
-    {'id':'michie-plus','title':'Michie Plus','category':'E-commerce','url':'https://michieplus.com.ng/','live':True,'description':'A full-featured e-commerce platform for fashion and lifestyle. Currently a case study of scalable architecture.','image':'michieplus.jpg','technologies':['Vue.js','Django','PostgreSQL','Redis','Celery'],'challenge':'Handling high traffic during flash sales with a seamless checkout experience.','solution':'Microservices architecture with a message queue for order processing, and a responsive Vue storefront.'},
+    {'id':'michie-plus','title':'Michie Plus','category':'E-commerce','url':'https://michieplus.com.ng/','live':True,'description':'A full-featured e-commerce platform for fashion and lifestyle. Currently a case study of scalable architecture.','image':'michieplus.webp','technologies':['Vue.js','Django','PostgreSQL','Redis','Celery'],'challenge':'Handling high traffic during flash sales with a seamless checkout experience.','solution':'Microservices architecture with a message queue for order processing, and a responsive Vue storefront.'},
     {'id':'becca-treats','title':'Becca Treats','category':'Food & Treats','url':None,'live':False,'description':'A delightful brand for homemade treats. This case study focuses on brand storytelling and online ordering.','image':'image.WebP','technologies':['WordPress','WooCommerce','Custom Theme','SEO'],'challenge':'Translating the warmth of a local bakery into a digital experience.','solution':'A custom WordPress theme with a focus on visuals and a simple ordering flow.'},
 ]
+
+
+# ============================================================
+# SEO CONTENT + CONSTANTS
+# ============================================================
+
+# Bump CONTENT_UPDATED whenever you genuinely change page content. It feeds <lastmod>
+# in the sitemap. (Google ignores lastmod once it learns it is always "today".)
+CONTENT_PUBLISHED = '2026-09-08'
+CONTENT_UPDATED = '2026-09-21'
+
+PROD_HOST = urlparse(SITE['url']).netloc
+
+# Pages that must never appear in search results.
+PRIVATE_PREFIXES = (
+    '/admin', '/agent-dashboard', '/agent-login', '/agent-register',
+    '/agent-pending', '/agent-logout', '/agent/',
+)
+
+# Pixel sizes of the portfolio images (prevents layout shift -> better CLS).
+PROJECT_IMAGE_DIMS = {
+    'jacyani.webp': (1366, 766),
+    'crownbee.webp': (1366, 766),
+    'michieplus.webp': (1366, 766),
+    'image.WebP': (720, 1080),
+}
+for _p in PROJECTS:
+    _w, _h = PROJECT_IMAGE_DIMS.get(_p['image'], (1366, 766))
+    _p['image_w'], _p['image_h'] = _w, _h
+
+for _a in ARTICLES:
+    _a.setdefault('published', CONTENT_PUBLISHED)
+    _a.setdefault('updated', CONTENT_UPDATED)
+ARTICLES.extend(NEW_ARTICLES)
 
 
 # ============================================================
@@ -448,6 +491,7 @@ def admin_required(view):
 
 @app.context_processor
 def inject_globals():
+    path = request.path
     return {
         'site': SITE,
         'social': SOCIAL,
@@ -459,7 +503,154 @@ def inject_globals():
         'now': datetime.now(),
         'support_phone': SUPPORT_PHONE,
         'commission_rate': COMMISSION_RATE,
+        # --- SEO ---
+        'noindex': path.startswith(PRIVATE_PREFIXES),
+        'canonical_url': SITE['url'] + (path.rstrip('/') or '/'),
     }
+
+
+# ============================================================
+# SEO INFRASTRUCTURE
+# ============================================================
+
+try:  # gzip/brotli - big Core Web Vitals win. Optional: pip install Flask-Compress
+    from flask_compress import Compress
+    Compress(app)
+except ImportError:
+    pass
+
+
+@app.template_filter('squish')
+def squish_filter(value):
+    """Collapse whitespace/newlines so <title> and meta descriptions are one clean line."""
+    return Markup(re.sub(r'\s+', ' ', str(value)).strip())
+
+
+@app.template_filter('slugify')
+def slugify_filter(value):
+    return re.sub(r'[^a-z0-9]+', '-', str(value).lower()).strip('-')
+
+
+@app.template_filter('prettydate')
+def prettydate_filter(value):
+    try:
+        d = datetime.strptime(value, '%Y-%m-%d')
+        return f"{d.day} {d.strftime('%B %Y')}"
+    except (TypeError, ValueError):
+        return value
+
+
+@app.template_global()
+def faq_schema(faqs):
+    """FAQPage JSON-LD built in Python (Jinja cannot do list comprehensions)."""
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        'mainEntity': [
+            {'@type': 'Question', 'name': q,
+             'acceptedAnswer': {'@type': 'Answer', 'text': a}}
+            for q, a in faqs
+        ],
+    }
+
+
+@app.template_global()
+def breadcrumb_schema(trail):
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        'itemListElement': [
+            {'@type': 'ListItem', 'position': i, 'name': c['name'], 'item': c['url']}
+            for i, c in enumerate(trail, start=1)
+        ],
+    }
+
+
+def crumbs(*items, visible=True):
+    """crumbs(('Services', '/services'), ('Web Development', '/services/web-development'))"""
+    trail = [{'name': 'Home', 'url': SITE['url'] + '/'}]
+    for name, url in items:
+        trail.append({'name': name, 'url': url if url.startswith('http') else SITE['url'] + url})
+    return {'trail': trail, 'visible': visible}
+
+
+@app.context_processor
+def static_cache_busting():
+    """Adds ?v=<mtime> to static URLs so they can be cached for a year safely."""
+    def dated_url_for(endpoint, **values):
+        external = values.pop('_external', False)
+        if endpoint == 'static' and values.get('filename'):
+            fp = os.path.join(app.static_folder, values['filename'])
+            if os.path.isfile(fp):
+                values['v'] = int(os.stat(fp).st_mtime)
+        path = url_for(endpoint, **values)
+        return SITE['url'] + path if external else path
+    return {'url_for': dated_url_for}
+
+
+@app.before_request
+def enforce_canonical_url():
+    """One URL per page: no www, no trailing slash, https (only when the proxy says it is http)."""
+    if request.method not in ('GET', 'HEAD'):
+        return None
+    host = request.host.split(':')[0].lower()
+    on_prod = host in (PROD_HOST, 'www.' + PROD_HOST)
+    path = request.path
+    target = path
+    if len(path) > 1 and path.endswith('/') and not path.startswith('/static/'):
+        target = path.rstrip('/') or '/'
+    needs_redirect = target != path
+    if on_prod:
+        if host.startswith('www.'):
+            needs_redirect = True
+        proto = request.headers.get('X-Forwarded-Proto', 'https').split(',')[0].strip().lower()
+        if proto == 'http':
+            needs_redirect = True
+    if not needs_redirect:
+        return None
+    base = SITE['url'] if on_prod else request.host_url.rstrip('/')
+    qs = request.query_string.decode('utf-8')
+    return redirect(base + target + ('?' + qs if qs else ''), code=301)
+
+
+@app.after_request
+def add_seo_headers(resp):
+    path = request.path
+    if path.startswith(PRIVATE_PREFIXES):
+        resp.headers['X-Robots-Tag'] = 'noindex, nofollow'
+    if path.startswith('/static/') and 'v' in request.args and resp.status_code == 200:
+        resp.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    resp.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+    return resp
+
+
+@app.errorhandler(404)
+def page_not_found(_err):
+    return render_template('404.html', noindex=True), 404
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/x-icon')
+
+
+@app.route('/site.webmanifest')
+def webmanifest():
+    manifest = {
+        'name': SITE['name'],
+        'short_name': SITE['name'],
+        'description': SITE['description'],
+        'start_url': '/',
+        'display': 'browser',
+        'background_color': '#05060a',
+        'theme_color': '#05060a',
+        'icons': [
+            {'src': url_for('static', filename='images/icon-192.png'), 'sizes': '192x192', 'type': 'image/png'},
+            {'src': url_for('static', filename='images/icon-512.png'), 'sizes': '512x512', 'type': 'image/png'},
+        ],
+    }
+    return app.response_class(json.dumps(manifest), mimetype='application/manifest+json')
 
 
 # ============================================================
@@ -470,49 +661,79 @@ def inject_globals():
 def home(): return render_template('index.html')
 
 @app.route('/about')
-def about(): return render_template('about.html')
+def about():
+    return render_template('about.html', breadcrumbs=crumbs(('About', url_for('about')), visible=False))
 
 @app.route('/vision')
-def vision(): return render_template('vision.html')
+def vision():
+    return render_template('vision.html', breadcrumbs=crumbs(('Vision', url_for('vision')), visible=False))
 
 @app.route('/services')
-def services(): return render_template('services.html')
+def services():
+    return render_template('services.html', breadcrumbs=crumbs(('Services', url_for('services'))))
 
 @app.route('/work')
-def work(): return render_template('work.html', projects=PROJECTS)
+def work():
+    return render_template('work.html', projects=PROJECTS,
+                           breadcrumbs=crumbs(('Work', url_for('work'))))
 
 @app.route('/work/<slug>')
 def project_detail(slug):
     project = next((p for p in PROJECTS if p['id'] == slug), None)
     if not project: abort(404)
-    return render_template('project_detail.html', project=project)
+    return render_template(
+        'project_detail.html', project=project,
+        og_image=SITE['url'] + url_for('static', filename='images/' + project['image']),
+        breadcrumbs=crumbs(('Work', url_for('work')), (project['title'], url_for('project_detail', slug=slug))),
+    )
 
 @app.route('/services/<slug>')
 def service_detail(slug):
     service = next((s for s in SERVICES if s['slug'] == slug), None)
     if not service: abort(404)
-    return render_template('service_detail.html', service=service)
+    related_articles = [a for a in ARTICLES if slug in a.get('related_services', [])][:3]
+    return render_template(
+        'service_detail.html', service=service, related_articles=related_articles,
+        breadcrumbs=crumbs(('Services', url_for('services')), (service['title'], url_for('service_detail', slug=slug))),
+    )
 
 @app.route('/locations/<slug>')
 def region_detail(slug):
     region = next((r for r in REGIONS if r['slug'] == slug), None)
     if not region: abort(404)
-    return render_template('region_detail.html', region=region)
+    return render_template(
+        'region_detail.html', region=region,
+        breadcrumbs=crumbs((region['name'], url_for('region_detail', slug=slug))),
+    )
 
 @app.route('/industries/<slug>')
 def industry_detail(slug):
     industry = next((i for i in INDUSTRIES if i['slug'] == slug), None)
     if not industry: abort(404)
-    return render_template('industry_detail.html', industry=industry)
+    return render_template(
+        'industry_detail.html', industry=industry,
+        breadcrumbs=crumbs((industry['name'], url_for('industry_detail', slug=slug))),
+    )
 
 @app.route('/insights')
-def insights(): return render_template('insights.html')
+def insights():
+    items = [{'@type': 'ListItem', 'position': i, 'name': a['title'], 'url': SITE['url'] + '/insights/' + a['slug']}
+             for i, a in enumerate(ARTICLES, start=1)]
+    return render_template('insights.html', articles_schema=items,
+                           breadcrumbs=crumbs(('Insights', url_for('insights'))))
 
 @app.route('/insights/<slug>')
 def article_detail(slug):
     article = next((a for a in ARTICLES if a['slug'] == slug), None)
     if not article: abort(404)
-    return render_template('article_detail.html', article=article)
+    related_services = [s for s in SERVICES if s['slug'] in article.get('related_services', [])] or SERVICES[:4]
+    related_articles = [a for a in ARTICLES if a['slug'] != slug][:3]
+    return render_template(
+        'article_detail.html', article=article,
+        related_services=related_services, related_articles=related_articles,
+        og_type='article',
+        breadcrumbs=crumbs(('Insights', url_for('insights')), (article['title'], url_for('article_detail', slug=slug))),
+    )
 
 
 # ============================================================
@@ -562,7 +783,8 @@ def agent_login():
 
 @app.route('/become-agent')
 def become_agent():
-    return render_template('become-agent.html')
+    return render_template('become-agent.html',
+                           breadcrumbs=crumbs(('Become an Agent', url_for('become_agent')), visible=False))
 
 
 @app.route('/agent-register', methods=['GET', 'POST'])
@@ -1297,31 +1519,25 @@ def contact():
             'success' if sent else 'error',
         )
         return redirect(url_for('contact'))
-    return render_template('contact.html')
+    return render_template('contact.html', breadcrumbs=crumbs(('Contact', url_for('contact'))))
 
 
 @app.route('/sitemap.xml')
 def sitemap():
-    now = datetime.utcnow().date().isoformat()
+    """Only real, indexable URLs, each with an honest <lastmod> (not 'today' on every request)."""
     pages = []
 
-    def add(endpoint, **kwargs):
-        pages.append({
-            'url': url_for(endpoint, _external=True, **kwargs),
-            'lastmod': now,
-            'changefreq': 'weekly',
-            'priority': '0.7',
-        })
+    def add(endpoint, lastmod=CONTENT_UPDATED, **kwargs):
+        pages.append({'url': SITE['url'] + url_for(endpoint, **kwargs), 'lastmod': lastmod})
 
-    for endpoint in ['home', 'about', 'vision', 'services', 'work', 'contact', 'insights']:
+    for endpoint in ['home', 'about', 'vision', 'services', 'work', 'insights', 'contact', 'become_agent']:
         add(endpoint)
-        pages[-1]['priority'] = '0.9' if endpoint in ('home', 'services') else '0.7'
-    for s in SERVICES: add('service_detail', slug=s['slug']); pages[-1]['priority'] = '0.9'
-    for r in REGIONS: add('region_detail', slug=r['slug']); pages[-1]['priority'] = '0.8'
-    for i in INDUSTRIES: add('industry_detail', slug=i['slug']); pages[-1]['priority'] = '0.8'
-    for a in ARTICLES: add('article_detail', slug=a['slug']); pages[-1]['priority'] = '0.8'
-    for p in PROJECTS: add('project_detail', slug=p['id']); pages[-1]['priority'] = '0.7'
-    return render_template('sitemap.xml', pages=pages), {'Content-Type': 'application/xml'}
+    for s in SERVICES: add('service_detail', slug=s['slug'])
+    for r in REGIONS: add('region_detail', slug=r['slug'])
+    for i in INDUSTRIES: add('industry_detail', slug=i['slug'])
+    for a in ARTICLES: add('article_detail', lastmod=a['updated'], slug=a['slug'])
+    for p in PROJECTS: add('project_detail', slug=p['id'])
+    return render_template('sitemap.xml', pages=pages), {'Content-Type': 'application/xml; charset=utf-8'}
 
 
 @app.route('/robots.txt')
@@ -1330,4 +1546,4 @@ def robots():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=os.environ.get('FLASK_DEBUG') == '1', host='0.0.0.0', port=5000)

@@ -1,6 +1,63 @@
 {% extends "base.html" %}
-{% block title %}{{ article.title }} | Entrix II{% endblock %}
+{% block title %}{% set t = article.seo_title|default(article.title) %}{{ t }}{% if t|length < 45 %} | Entrix II{% endif %}{% endblock %}
 {% block description %}{{ article.description }}{% endblock %}
-{% block schema %}<script type="application/ld+json">{{ {'@context':'https://schema.org','@type':'Article','headline':article.title,'description':article.description,'author':{'@type':'Organization','name':site.name},'publisher':{'@type':'Organization','name':site.name,'logo':{'@type':'ImageObject','url':url_for('static',filename='images/entrix-ii-logo.jpeg',_external=True)}},'mainEntityOfPage':{'@type':'WebPage','@id':site.url + '/insights/' + article.slug}} | tojson }}</script>{% endblock %}
-{% block breadcrumbs %}<nav class="breadcrumbs container" aria-label="Breadcrumb"><a href="{{ url_for('home') }}">Home</a><span>›</span><a href="{{ url_for('insights') }}">Insights</a><span>›</span><span aria-current="page">{{ article.title }}</span></nav>{% endblock %}
-{% block content %}<div class="page-header"><p class="section-kicker">ENTRIX II / GUIDE</p><h1>{{ article.title }}</h1><p>{{ article.intro }}</p></div><article class="project-detail"><div class="detail-content"><div class="main"><p>{{ article.intro }}</p>{% for heading,text in article.sections %}<h2>{{ heading }}</h2><p>{{ text }}</p>{% endfor %}<p><strong>Need help applying this to your business?</strong> <a href="{{ url_for('contact') }}">Talk to Entrix II →</a></p></div><aside class="sidebar"><h3>Related services</h3><ul>{% for service in services[:8] %}<li><a href="{{ url_for('service_detail',slug=service.slug) }}">{{ service.title }}</a></li>{% endfor %}</ul></aside></div></article>{% endblock %}
+
+{% block head %}
+<meta property="article:published_time" content="{{ article.published }}">
+<meta property="article:modified_time" content="{{ article.updated }}">
+<meta property="article:author" content="{{ site.name }}">
+{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">{{ {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  'headline': article.title,
+  'description': article.description,
+  'datePublished': article.published,
+  'dateModified': article.updated,
+  'inLanguage': 'en-NG',
+  'image': url_for('static', filename='images/og-default.jpg', _external=True),
+  'author': {'@id': site.url ~ '/#organization'},
+  'publisher': {'@id': site.url ~ '/#organization'},
+  'mainEntityOfPage': {'@type': 'WebPage', '@id': site.url ~ '/insights/' ~ article.slug}
+} | tojson }}</script>
+{% if article.faqs %}<script type="application/ld+json">{{ faq_schema(article.faqs) | tojson }}</script>{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header"><p class="section-kicker">ENTRIX II / GUIDE</p><h1>{{ article.title }}</h1><p>{{ article.intro }}</p></div>
+
+<article class="project-detail"><div class="detail-content">
+  <div class="main">
+    <p class="article-meta">By {{ site.name }} · Published <time datetime="{{ article.published }}">{{ article.published|prettydate }}</time>{% if article.updated != article.published %} · Updated <time datetime="{{ article.updated }}">{{ article.updated|prettydate }}</time>{% endif %}</p>
+
+    {% if article.sections|length >= 4 %}
+    <nav aria-label="On this page"><ul class="article-toc">{% for heading, text in article.sections %}<li><a href="#{{ heading|slugify }}">{{ heading }}</a></li>{% endfor %}{% if article.faqs %}<li><a href="#faq">Frequently asked questions</a></li>{% endif %}</ul></nav>
+    {% endif %}
+
+    {% for heading, text in article.sections %}
+    <h2 id="{{ heading|slugify }}">{{ heading }}</h2>
+    {% for para in (text if text is not string else [text]) %}<p>{{ para }}</p>{% endfor %}
+    {% endfor %}
+
+    {% if article.faqs %}
+    <section class="article-faq" id="faq">
+      <h2>Frequently asked questions</h2>
+      {% for q, a in article.faqs %}<div class="faq-item"><h3>{{ q }}</h3><p>{{ a }}</p></div>{% endfor %}
+    </section>
+    {% endif %}
+
+    <p><strong>Need help applying this to your business?</strong> <a href="{{ url_for('contact') }}">Talk to Entrix II →</a></p>
+  </div>
+
+  <aside class="sidebar">
+    <h3>Related services</h3>
+    <ul>{% for service in related_services %}<li><a href="{{ url_for('service_detail', slug=service.slug) }}">{{ service.title }}</a></li>{% endfor %}</ul>
+    {% if related_articles %}
+    <h3>More guides</h3>
+    <ul>{% for a in related_articles %}<li><a href="{{ url_for('article_detail', slug=a.slug) }}">{{ a.title }}</a></li>{% endfor %}</ul>
+    {% endif %}
+  </aside>
+</div></article>
+{% endblock %}

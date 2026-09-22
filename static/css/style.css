@@ -2754,3 +2754,49 @@ body.mobile-menu-open{
   }
   .project-card:hover{ transform: none !important; }
 }
+
+/* ==========================================================================
+   SEO ADDITIONS (footer site map, article layout, contact details)
+   ========================================================================== */
+.footer-sitemap{
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 28px 32px;
+  padding: 8px 0 28px;
+  border-bottom: 1px solid var(--line);
+  order: 5;
+}
+.footer-sitemap h2{
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin: 0 0 12px;
+  font-weight: 700;
+}
+.footer-sitemap ul{ list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.footer-sitemap a{ font-size: 13px; color: var(--ink-faint); line-height: 1.4; }
+.footer-sitemap a:hover{ color: var(--blue-glow); }
+.footer-brand, .footer-links, .footer-social{ order: 1; }
+.footer-copy{ order: 9; }
+
+.service-item h3 a{ color: inherit; text-decoration: none; }
+.service-item h3 a::after{ content: ""; position: absolute; inset: 0; }
+
+.article-meta{ font-size: .82rem; opacity: .7; margin: 0 0 1.25rem; }
+.article-toc{ margin: 0 0 1.75rem; padding: 0; list-style: none; display: grid; gap: .4rem; font-size: .92rem; }
+.article-toc a{ text-decoration: underline; text-underline-offset: 3px; }
+.project-detail .main h3{ margin-top: 1.25rem; }
+.article-faq .faq-item h3{ font-size: 1.05rem; }
+.contact-details{ display: grid; gap: .6rem; margin: 0 0 2rem; padding: 0; list-style: none; }
+.contact-details a{ text-decoration: underline; text-underline-offset: 3px; }
+.link-row{ display: flex; flex-wrap: wrap; gap: .6rem 1rem; margin-top: 1rem; }
+.link-row a{ text-decoration: underline; text-underline-offset: 3px; font-size: .92rem; }
+
+/* Breadcrumbs were rendering underneath the fixed header - push them below it */
+nav.breadcrumbs{ padding-top: calc(var(--nav-h) + 18px); padding-bottom: 6px; }
+nav.breadcrumbs + .page-header{ padding-top: 28px; }
+.footer-sitemap{ border-bottom: 0; padding-bottom: 8px; }
+.about-seo-footer .section-kicker{ text-align: left; }

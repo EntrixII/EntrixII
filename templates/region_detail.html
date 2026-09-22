@@ -1,10 +1,35 @@
 {% extends "base.html" %}
-{% block title %}{{ region.title }} | Entrix II{% endblock %}
-{% block description %}{{ region.intro }} Entrix II offers web development, software, e-commerce, SEO and digital services for businesses in {{ region.name }}.{% endblock %}
-{% block breadcrumbs %}<nav class="breadcrumbs container" aria-label="Breadcrumb"><a href="{{ url_for('home') }}">Home</a><span>›</span><span aria-current="page">{{ region.name }}</span></nav>{% endblock %}
+{% block title %}{{ region.title }}{% if region.title|length < 45 %} | Entrix II{% endif %}{% endblock %}
+{% block description %}Web development, e-commerce, SEO and custom software for businesses in {{ region.name }}. Entrix II delivers remotely across Nigeria and Africa.{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">{{ {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  'name': region.title,
+  'url': site.url ~ '/locations/' ~ region.slug,
+  'description': region.intro,
+  'inLanguage': 'en-NG',
+  'isPartOf': {'@id': site.url ~ '/#website'},
+  'about': {'@id': site.url ~ '/#organization'}
+} | tojson }}</script>
+{% endblock %}
+
 {% block content %}
 <div class="page-header"><p class="section-kicker">DIGITAL SERVICES / {{ region.name|upper }}</p><h1>{{ region.title }}</h1><p>{{ region.intro }}</p></div>
+
 <section class="section-about"><div class="container"><div class="about-grid"><div class="about-label"><span>01</span><span>LOCAL CONTEXT</span></div><div class="about-content"><h2 class="section-title">Digital products for <span>{{ region.name }}.</span></h2>{% for p in region.body %}<p>{{ p }}</p>{% endfor %}<a href="{{ url_for('contact') }}" class="btn btn-primary">Discuss a Project →</a></div></div></div></section>
-<section class="section-services-detail"><div class="container"><p class="section-kicker">SERVICES</p><h2 class="section-title">What we can build <span>for your business.</span></h2><div class="service-detail-grid">{% for service in services[:8] %}<article class="service-detail-card"><h2><a href="{{ url_for('service_detail',slug=service.slug) }}">{{ service.title }}</a></h2><p>{{ service.short }}</p><a href="{{ url_for('service_detail',slug=service.slug) }}" class="service-detail-link">Learn more →</a></article>{% endfor %}</div></div></section>
+
+<section class="section-services-detail"><div class="container"><p class="section-kicker">SERVICES</p><h2 class="section-title">What we can build <span>for your business.</span></h2><div class="service-detail-grid">{% for service in services %}<article class="service-detail-card"><h3><a href="{{ url_for('service_detail',slug=service.slug) }}">{{ service.title }}</a></h3><p>{{ service.short }}</p><a href="{{ url_for('service_detail',slug=service.slug) }}" class="service-detail-link">Learn more →</a></article>{% endfor %}</div></div></section>
+
 <section class="section-why"><div class="container"><p class="section-kicker">WORK WITH US</p><h2 class="section-title">Remote delivery, <span>local understanding.</span></h2><p class="section-sub">We can work remotely with teams in {{ region.name }}. Project communication, scope, milestones and deliverables are agreed before development begins.</p><a href="{{ url_for('contact') }}" class="btn btn-ghost">Start a Conversation →</a></div></section>
+
+<section class="section-process"><div class="container">
+  <p class="section-kicker">OTHER LOCATIONS</p>
+  <div class="tech-grid">{% for r in regions if r.slug != region.slug %}<a class="tech-badge" href="{{ url_for('region_detail',slug=r.slug) }}">{{ r.name }}</a>{% endfor %}</div>
+  <p class="section-kicker" style="margin-top:2rem">INDUSTRIES WE SERVE</p>
+  <div class="tech-grid">{% for i in industries %}<a class="tech-badge" href="{{ url_for('industry_detail',slug=i.slug) }}">{{ i.name }}</a>{% endfor %}</div>
+  <p class="section-kicker" style="margin-top:2rem">GUIDES</p>
+  <div class="link-row">{% for a in articles[:4] %}<a href="{{ url_for('article_detail',slug=a.slug) }}">{{ a.title }}</a>{% endfor %}</div>
+</div></section>
 {% endblock %}

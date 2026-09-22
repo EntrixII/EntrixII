@@ -1,12 +1,64 @@
 {% extends "base.html" %}
 {% block title %}{{ service.title }} in Nigeria & Africa | Entrix II{% endblock %}
-{% block description %}{{ service.short }} Entrix II provides {{ service.title|lower }} for businesses in Nigeria and across Africa.{% endblock %}
-{% block schema %}<script type="application/ld+json">{{ {'@context':'https://schema.org','@type':'Service','name':service.title,'serviceType':service.title,'provider':{'@type':'Organization','name':site.name,'url':site.url},'areaServed':[{'@type':'Country','name':'Nigeria'},{'@type':'Continent','name':'Africa'}],'url':site.url + '/services/' + service.slug} | tojson }}</script>{% if service.faqs %}<script type="application/ld+json">{{ {'@context':'https://schema.org','@type':'FAQPage','mainEntity':[{'@type':'Question','name':q,'acceptedAnswer':{'@type':'Answer','text':a}} for q,a in service.faqs]} | tojson }}</script>{% endif %}{% endblock %}
-{% block breadcrumbs %}<nav class="breadcrumbs container" aria-label="Breadcrumb"><a href="{{ url_for('home') }}">Home</a><span>›</span><a href="{{ url_for('services') }}">Services</a><span>›</span><span aria-current="page">{{ service.title }}</span></nav>{% endblock %}
+{% block description %}{{ service.short }} Serving Nigeria and Africa — get a quote from Entrix II.{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">{{ {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  '@id': site.url ~ '/services/' ~ service.slug ~ '#service',
+  'name': service.title,
+  'serviceType': service.title,
+  'description': service.description,
+  'url': site.url ~ '/services/' ~ service.slug,
+  'provider': {'@id': site.url ~ '/#organization'},
+  'areaServed': [{'@type': 'Country', 'name': 'Nigeria'}, {'@type': 'Continent', 'name': 'Africa'}],
+  'audience': {'@type': 'BusinessAudience', 'audienceType': service.audience}
+} | tojson }}</script>
+{% if service.faqs %}<script type="application/ld+json">{{ faq_schema(service.faqs) | tojson }}</script>{% endif %}
+{% endblock %}
+
 {% block content %}
-<div class="page-header"><p class="section-kicker">ENTRIX II / SERVICE</p><h1>{{ service.title }} in Nigeria & Africa</h1><p>{{ service.short }}</p></div>
-<section class="section-about"><div class="container"><div class="about-grid"><div class="about-label"><span>01</span><span>OVERVIEW</span></div><div class="about-content"><h2 class="section-title">{{ service.title }} <span>built around your goal.</span></h2><p>{{ service.description }}</p><p>Our work is scoped around the actual business outcome, the users who need the product and the technical requirements behind it. That means the deliverable can be a focused website, a complete application, an integration or an ongoing improvement plan.</p><a href="{{ url_for('contact') }}?service={{ service.id }}" class="btn btn-primary">Get a Quote →</a></div></div></div></section>
-<section class="section-featured"><div class="container"><p class="section-kicker">DELIVERABLES</p><h2 class="section-title">What this service <span>can include.</span></h2><div class="capability-list">{% for feature in service.features %}<div><strong>{{ '%02d'|format(loop.index) }}</strong><span>{{ feature }}</span></div>{% endfor %}</div></div></section>
-<section class="section-faq"><div class="container"><p class="section-kicker">FAQ</p><h2 class="section-title">Common questions <span>about {{ service.title|lower }}.</span></h2><div class="faq-list">{% for q,a in service.faqs %}<div class="faq-item"><h2>{{ q }}</h2><p>{{ a }}</p></div>{% endfor %}</div></div></section>
-<section class="section-process"><div class="container"><p class="section-kicker">RELATED SERVICES</p><div class="tech-grid">{% for s in services if s.id != service.id %}<a class="tech-badge" href="{{ url_for('service_detail',slug=s.slug) }}">{{ s.title }}</a>{% endfor %}</div></div></section>
+<div class="page-header"><p class="section-kicker">ENTRIX II / SERVICE</p><h1>{{ service.title }} in Nigeria &amp; Africa</h1><p>{{ service.short }}</p></div>
+
+<section class="section-about"><div class="container"><div class="about-grid"><div class="about-label"><span>01</span><span>OVERVIEW</span></div><div class="about-content">
+  <h2 class="section-title">{{ service.title }} <span>built around your goal.</span></h2>
+  <p>{{ service.description }}</p>
+  <p>Our work is scoped around the actual business outcome, the users who need the product and the technical requirements behind it. That means the deliverable can be a focused website, a complete application, an integration or an ongoing improvement plan.</p>
+  <p><strong>Who it is for:</strong> {{ service.audience }}.</p>
+  <a href="{{ url_for('contact') }}?service={{ service.id }}" class="btn btn-primary">Get a Quote →</a>
+</div></div></div></section>
+
+<section class="section-featured"><div class="container"><p class="section-kicker">DELIVERABLES</p><h2 class="section-title">What this service <span>can include.</span></h2>
+  <div class="capability-list">{% for feature in service.features %}<div><strong>{{ '%02d'|format(loop.index) }}</strong><span>{{ feature }}</span></div>{% endfor %}</div>
+</div></section>
+
+<section class="section-process"><div class="container"><p class="section-kicker">HOW A PROJECT WORKS</p><h2 class="section-title">From first call <span>to launch and beyond.</span></h2>
+  <div class="process-grid">
+    <div class="process-item"><span>01</span><h3>Discover</h3><p>We agree the goal, audience, scope and success measures before any design or code.</p></div>
+    <div class="process-item"><span>02</span><h3>Design &amp; plan</h3><p>Page structure, user journeys and technical approach are reviewed with you first.</p></div>
+    <div class="process-item"><span>03</span><h3>Build &amp; test</h3><p>Development with mobile performance, security and search foundations built in.</p></div>
+    <div class="process-item"><span>04</span><h3>Launch &amp; support</h3><p>Deployment, handover and ongoing improvements once the product is live.</p></div>
+  </div>
+</div></section>
+
+{% if service.faqs %}
+<section class="section-faq"><div class="container"><p class="section-kicker">FAQ</p><h2 class="section-title">Common questions <span>about {{ service.title|lower }}.</span></h2>
+  <div class="faq-list">{% for q,a in service.faqs %}<div class="faq-item"><h3>{{ q }}</h3><p>{{ a }}</p></div>{% endfor %}</div>
+</div></section>
+{% endif %}
+
+{% if related_articles %}
+<section class="section-process"><div class="container"><p class="section-kicker">RELATED GUIDES</p><h2 class="section-title">Read before <span>you decide.</span></h2>
+  <div class="link-row">{% for a in related_articles %}<a href="{{ url_for('article_detail', slug=a.slug) }}">{{ a.title }}</a>{% endfor %}</div>
+</div></section>
+{% endif %}
+
+<section class="section-process"><div class="container"><p class="section-kicker">RELATED SERVICES</p>
+  <div class="tech-grid">{% for s in services if s.id != service.id %}<a class="tech-badge" href="{{ url_for('service_detail',slug=s.slug) }}">{{ s.title }}</a>{% endfor %}</div>
+  <p class="section-kicker" style="margin-top:2rem">WHERE WE SERVE</p>
+  <div class="tech-grid">{% for r in regions %}<a class="tech-badge" href="{{ url_for('region_detail',slug=r.slug) }}">{{ r.name }}</a>{% endfor %}</div>
+  <p class="section-kicker" style="margin-top:2rem">INDUSTRIES</p>
+  <div class="tech-grid">{% for i in industries %}<a class="tech-badge" href="{{ url_for('industry_detail',slug=i.slug) }}">{{ i.name }}</a>{% endfor %}</div>
+</div></section>
 {% endblock %}

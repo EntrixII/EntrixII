@@ -1,4 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Digital Growth Insights for Nigerian Businesses | Entrix II{% endblock %}
-{% block description %}Practical guides on websites, SEO, e-commerce, payments and digital products for businesses in Nigeria and Africa.{% endblock %}
-{% block content %}<div class="page-header"><p class="section-kicker">ENTRIX II / INSIGHTS</p><h1>Practical digital guides.</h1><p>Original articles about websites, SEO, software, payments and digital growth for businesses in Nigeria and Africa.</p></div><section class="section-featured"><div class="container"><div class="project-grid">{% for article in articles %}<article class="project-card"><div class="project-card-inner"><div class="project-card-content"><p class="category">GUIDE</p><h2><a href="{{ url_for('article_detail',slug=article.slug) }}">{{ article.title }}</a></h2><p>{{ article.description }}</p><a href="{{ url_for('article_detail',slug=article.slug) }}" class="btn-sm primary">Read Guide →</a></div></div></article>{% endfor %}</div></div></section>{% endblock %}
+{% block title %}Digital Growth Guides for Nigerian Businesses | Entrix II{% endblock %}
+{% block description %}Practical guides on websites, SEO, Google Business Profile, e-commerce, payments and domains for businesses in Nigeria and Africa.{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">{{ {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  'name': 'Entrix II Insights',
+  'url': site.url ~ '/insights',
+  'inLanguage': 'en-NG',
+  'isPartOf': {'@id': site.url ~ '/#website'},
+  'mainEntity': {
+    '@type': 'ItemList',
+    'itemListElement': articles_schema
+  }
+} | tojson }}</script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header"><p class="section-kicker">ENTRIX II / INSIGHTS</p><h1>Practical digital guides for Nigerian businesses.</h1><p>Original articles about websites, SEO, local search, software, payments and digital growth for businesses in Nigeria and Africa.</p></div>
+<section class="section-featured"><div class="container"><div class="project-grid">{% for article in articles %}<article class="project-card"><div class="project-card-inner"><div class="project-card-content"><p class="category">GUIDE</p><h2><a href="{{ url_for('article_detail',slug=article.slug) }}">{{ article.title }}</a></h2><p>{{ article.description }}</p><a href="{{ url_for('article_detail',slug=article.slug) }}" class="btn-sm primary">Read Guide →</a></div></div></article>{% endfor %}</div></div></section>
+{% endblock %}

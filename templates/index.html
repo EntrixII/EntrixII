@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}Entrix — Web Development, Software & Digital Solutions{% endblock %}
+{% block title %}Entrix II — Web Development & Software Studio in Nigeria{% endblock %}
 
-{% block description %}Entrix II is a developer-led digital engineering studio building websites, web applications, e-commerce systems, custom software, SEO and digital solutions for businesses in Nigeria and across Africa.{% endblock %}
+{% block description %}Developer-led studio building websites, web apps, e-commerce, custom software and SEO for businesses in Nigeria and across Africa. Start your project with Entrix II.{% endblock %}
 
 {% block content %}
 
@@ -17,7 +17,7 @@
     <div class="hero-glass">
       <p class="hero-eyebrow">
         <span class="dot"></span>
-        DIGITAL ENGINEERING STUDIO
+        DIGITAL ENGINEERING STUDIO · NIGERIA &amp; AFRICA
       </p>
 
       <h1 class="hero-title">
@@ -30,9 +30,10 @@
       </h1>
 
       <p class="hero-copy">
-        Entrix is a developer-led digital studio focused on building websites,
+        Entrix II is a developer-led digital studio in Nigeria building websites,
         web applications, e-commerce platforms, business systems and custom
-        digital products that help businesses operate and grow online.
+        digital products that help businesses across Nigeria and Africa operate
+        and grow online.
       </p>
 
       <div class="hero-actions">
@@ -96,7 +97,7 @@
           <span class="service-icon">✦</span>
           <div class="icon-glow"></div>
         </div>
-        <h3>{{ service.title }}</h3>
+        <h3><a href="{{ url_for('service_detail', slug=service.slug) }}">{{ service.title }}</a></h3>
       </div>
       {% endfor %}
     </div>
@@ -390,6 +391,24 @@
     <div class="keyword-cloud">
       {% for service in services %}
       <a href="{{ url_for('service_detail',slug=service.slug) }}">{{ service.title }}</a>
+      {% endfor %}
+    </div>
+    <p class="section-kicker" style="margin-top:2rem">WHERE WE WORK</p>
+    <div class="keyword-cloud">
+      {% for region in regions %}
+      <a href="{{ url_for('region_detail',slug=region.slug) }}">Web development in {{ region.name }}</a>
+      {% endfor %}
+    </div>
+    <p class="section-kicker" style="margin-top:2rem">INDUSTRIES</p>
+    <div class="keyword-cloud">
+      {% for industry in industries %}
+      <a href="{{ url_for('industry_detail',slug=industry.slug) }}">{{ industry.name }}</a>
+      {% endfor %}
+    </div>
+    <p class="section-kicker" style="margin-top:2rem">LATEST GUIDES</p>
+    <div class="link-row">
+      {% for a in articles[-5:] %}
+      <a href="{{ url_for('article_detail',slug=a.slug) }}">{{ a.title }}</a>
       {% endfor %}
     </div>
   </div>

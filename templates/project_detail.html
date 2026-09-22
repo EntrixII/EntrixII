@@ -1,7 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}{{ project.title }} — Entrix II{% endblock %}
-{% block description %}{{ project.description }}{% endblock %}
+{% block title %}{{ project.title }} — {{ project.category }} Case Study | Entrix II{% endblock %}
+{% block description %}{{ project.description }} {{ 'Live project' if project.live else 'Case study' }} by Entrix II.{% endblock %}
+
+{% block schema %}
+<script type="application/ld+json">{{ {
+  '@context': 'https://schema.org',
+  '@type': 'CreativeWork',
+  'name': project.title,
+  'description': project.description,
+  'url': site.url ~ '/work/' ~ project.id,
+  'genre': project.category,
+  'image': og_image,
+  'creator': {'@id': site.url ~ '/#organization'},
+  'inLanguage': 'en'
+} | tojson }}</script>
+{% endblock %}
 
 {% block content %}
 <div class="project-detail">
@@ -9,11 +23,11 @@
 
   <div class="detail-header">
     <p class="category">{{ project.category }}</p>
-    <h1>{{ project.title }}</h1>
+    <h1>{{ project.title }}: {{ project.category }} case study</h1>
   </div>
 
   <div class="detail-image">
-    <img src="{{ url_for('static', filename='images/' + project.image) }}" alt="{{ project.title }} screenshot">
+    <img src="{{ url_for('static', filename='images/' + project.image) }}" alt="{{ project.title }} website screenshot" width="{{ project.image_w }}" height="{{ project.image_h }}" fetchpriority="high" decoding="async">
   </div>
 
   <div class="detail-content">
@@ -22,6 +36,7 @@
       <p>{{ project.challenge }}</p>
       <h2>Solution</h2>
       <p>{{ project.solution }}</p>
+      <p><strong>Need something similar?</strong> <a href="{{ url_for('contact') }}">Talk to Entrix II →</a> or explore our <a href="{{ url_for('services') }}">web development and digital services</a>.</p>
     </div>
     <div class="sidebar">
       <h3>Technologies</h3>
