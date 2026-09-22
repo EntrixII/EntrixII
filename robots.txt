@@ -1,3 +1,9 @@
 User-agent: *
 Allow: /
+# Private areas (login pages stay crawlable on purpose so their noindex header can be read)
+Disallow: /admin
+Disallow: /agent-dashboard
+Disallow: /agent/
+Disallow: /agent-logout
+
 Sitemap: https://entrixii.com.ng/sitemap.xml
