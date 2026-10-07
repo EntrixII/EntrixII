@@ -46,7 +46,7 @@
       <input type="text" id="company" name="company">
     </div>
 
-    <div class="form-group phone-group">
+    <div class="form-group">
       <label for="phone">Phone / WhatsApp</label>
       <div class="phone-row">
         <select id="country_code" name="country_code">
@@ -58,6 +58,7 @@
           <option value="+376">Andorra (+376)</option>
           <option value="+244">Angola (+244)</option>
           <option value="+1-264">Anguilla (+1-264)</option>
+          <option value="+672">Antarctica (+672)</option>
           <option value="+1-268">Antigua and Barbuda (+1-268)</option>
           <option value="+54">Argentina (+54)</option>
           <option value="+374">Armenia (+374)</option>
@@ -78,6 +79,7 @@
           <option value="+591">Bolivia (+591)</option>
           <option value="+387">Bosnia and Herzegovina (+387)</option>
           <option value="+267">Botswana (+267)</option>
+          <option value="+47">Bouvet Island (+47)</option>
           <option value="+55">Brazil (+55)</option>
           <option value="+246">British Indian Ocean Territory (+246)</option>
           <option value="+673">Brunei (+673)</option>
@@ -88,6 +90,7 @@
           <option value="+237">Cameroon (+237)</option>
           <option value="+1">Canada (+1)</option>
           <option value="+238">Cape Verde (+238)</option>
+          <option value="+599">Caribbean Netherlands (+599)</option>
           <option value="+1-345">Cayman Islands (+1-345)</option>
           <option value="+236">Central African Republic (+236)</option>
           <option value="+235">Chad (+235)</option>
@@ -143,6 +146,7 @@
           <option value="+245">Guinea-Bissau (+245)</option>
           <option value="+592">Guyana (+592)</option>
           <option value="+509">Haiti (+509)</option>
+          <option value="+672">Heard Island and McDonald Islands (+672)</option>
           <option value="+504">Honduras (+504)</option>
           <option value="+852">Hong Kong (+852)</option>
           <option value="+36">Hungary (+36)</option>
@@ -204,7 +208,7 @@
           <option value="+64">New Zealand (+64)</option>
           <option value="+505">Nicaragua (+505)</option>
           <option value="+227">Niger (+227)</option>
-          <option value="+234">Nigeria (+234)</option>
+          <option value="+234" selected>Nigeria (+234)</option>
           <option value="+683">Niue (+683)</option>
           <option value="+672">Norfolk Island (+672)</option>
           <option value="+850">North Korea (+850)</option>
@@ -249,6 +253,7 @@
           <option value="+386">Slovenia (+386)</option>
           <option value="+677">Solomon Islands (+677)</option>
           <option value="+252">Somalia (+252)</option>
+          <option value="+500">South Georgia and South Sandwich Islands (+500)</option>
           <option value="+27">South Africa (+27)</option>
           <option value="+82">South Korea (+82)</option>
           <option value="+211">South Sudan (+211)</option>
@@ -256,6 +261,7 @@
           <option value="+94">Sri Lanka (+94)</option>
           <option value="+249">Sudan (+249)</option>
           <option value="+597">Suriname (+597)</option>
+          <option value="+47">Svalbard and Jan Mayen (+47)</option>
           <option value="+46">Sweden (+46)</option>
           <option value="+41">Switzerland (+41)</option>
           <option value="+963">Syria (+963)</option>
@@ -278,6 +284,7 @@
           <option value="+971">United Arab Emirates (+971)</option>
           <option value="+44">United Kingdom (+44)</option>
           <option value="+1">United States (+1)</option>
+          <option value="+1">US Minor Outlying Islands (+1)</option>
           <option value="+598">Uruguay (+598)</option>
           <option value="+998">Uzbekistan (+998)</option>
           <option value="+678">Vanuatu (+678)</option>
@@ -312,8 +319,8 @@
     </div>
 
     <div class="form-group">
-      <label for="budget">Budget Range (optional)</label>
-      <input type="text" id="budget" name="budget" placeholder="e.g., $5k–$10k">
+      <label for="budget">Budget (optional)</label>
+      <input type="text" id="budget" name="budget" placeholder="e.g., ₦500,000 or $5,000 or €3,000 — include your currency">
     </div>
 
     <button type="submit" class="submit-btn">Send Message</button>
@@ -345,7 +352,7 @@
     </div>
     <p class="contact-phone">
       <strong>Phone / WhatsApp:</strong>
-      <a href="tel:+2347068133655"></a>
+      <a href="tel:+2347068133655">+234 706 813 3655</a>
     </p>
   </div>
 </div>
@@ -363,7 +370,7 @@
     gap: 10px;
   }
   .phone-row select {
-    max-width: 220px;
+    max-width: 260px;
   }
   .phone-row input {
     flex: 1;
