@@ -366,17 +366,48 @@ def send_contact_email(form):
     if not MAIL_USERNAME or not MAIL_PASSWORD:
         app.logger.warning('MAIL_USERNAME / MAIL_PASSWORD not set — contact email not sent.')
         return False
-    name=form.get('name','').strip(); email=form.get('email','').strip(); company=form.get('company','').strip(); service=form.get('service','').strip(); description=form.get('description','').strip(); budget=form.get('budget','').strip()
-    service_title=next((s['title'] for s in SERVICES if s['id']==service),service)
-    msg=EmailMessage(); msg['Subject']=f'New project inquiry from {name or "website visitor"}'; msg['From']=MAIL_USERNAME; msg['To']=MAIL_RECIPIENT
-    if email: msg['Reply-To']=email
-    msg.set_content(f"New message from the Entrix II contact form\n\nName: {name}\nEmail: {email}\nCompany: {company or '—'}\nService: {service_title or '—'}\nBudget: {budget or '—'}\n\nProject description:\n{description}\n")
+
+    name = form.get('name', '').strip()
+    email = form.get('email', '').strip()
+    company = form.get('company', '').strip()
+    country_code = form.get('country_code', '').strip()
+    phone = form.get('phone', '').strip()
+    service = form.get('service', '').strip()
+    description = form.get('description', '').strip()
+    budget = form.get('budget', '').strip()
+
+    # Combine country code + phone into one readable value
+    full_phone = f"{country_code} {phone}".strip() if (country_code or phone) else ''
+
+    service_title = next((s['title'] for s in SERVICES if s['id'] == service), service)
+
+    msg = EmailMessage()
+    msg['Subject'] = f'New project inquiry from {name or "website visitor"}'
+    msg['From'] = MAIL_USERNAME
+    msg['To'] = MAIL_RECIPIENT
+    if email:
+        msg['Reply-To'] = email
+
+    msg.set_content(
+        f"New message from the Entrix II contact form\n\n"
+        f"Name: {name}\n"
+        f"Email: {email}\n"
+        f"Company: {company or '—'}\n"
+        f"Phone / WhatsApp: {full_phone or '—'}\n"
+        f"Service: {service_title or '—'}\n"
+        f"Budget: {budget or '—'}\n\n"
+        f"Project description:\n{description}\n"
+    )
+
     try:
-        with smtplib.SMTP(MAIL_SERVER,MAIL_PORT,timeout=10) as smtp:
-            smtp.starttls(); smtp.login(MAIL_USERNAME,MAIL_PASSWORD); smtp.send_message(msg)
+        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=10) as smtp:
+            smtp.starttls()
+            smtp.login(MAIL_USERNAME, MAIL_PASSWORD)
+            smtp.send_message(msg)
         return True
     except Exception as exc:
-        app.logger.error(f'Failed to send contact email: {exc}'); return False
+        app.logger.error(f'Failed to send contact email: {exc}')
+        return False
 
 
 def send_agent_approved_email(agent_name, agent_email):
